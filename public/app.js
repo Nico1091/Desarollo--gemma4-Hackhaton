@@ -1,0 +1,706 @@
+// API Configuration
+const API_BASE = 'http://localhost:3000/api';
+
+// State
+let conversationHistory = [];
+let currentDocumentText = '';
+let documentConversationHistory = [];
+
+// DOM Elements
+const chatMessages = document.getElementById('chatMessages');
+const messageInput = document.getElementById('messageInput');
+const sendButton = document.getElementById('sendButton');
+const searchInput = document.getElementById('searchInput');
+const searchButton = document.getElementById('searchButton');
+const searchResults = document.getElementById('searchResults');
+const bookTopic = document.getElementById('bookTopic');
+const searchBooksButton = document.getElementById('searchBooksButton');
+const booksResults = document.getElementById('booksResults');
+const navItems = document.querySelectorAll('.nav-item');
+const contentSections = document.querySelectorAll('.content-section');
+const quickActions = document.querySelectorAll('.quick-action');
+const topicCards = document.querySelectorAll('.topic-card');
+
+// Document upload elements
+const pdfInput = document.getElementById('pdfInput');
+const wordInput = document.getElementById('wordInput');
+const documentInfo = document.getElementById('documentInfo');
+const documentFileName = document.getElementById('documentFileName');
+const documentPages = document.getElementById('documentPages');
+const documentChars = document.getElementById('documentChars');
+const documentPreviewText = document.getElementById('documentPreviewText');
+const documentQuestionInput = document.getElementById('documentQuestionInput');
+const askDocumentButton = document.getElementById('askDocumentButton');
+const clearDocument = document.getElementById('clearDocument');
+
+// Navigation
+navItems.forEach(item => {
+    item.addEventListener('click', () => {
+        const section = item.dataset.section;
+        
+        navItems.forEach(nav => nav.classList.remove('active'));
+        item.classList.add('active');
+        
+        contentSections.forEach(sec => sec.classList.remove('active'));
+        document.getElementById(`${section}-section`).classList.add('active');
+    });
+});
+
+// Chat Functionality
+async function sendMessage(message) {
+    if (!message.trim()) return;
+    
+    // Add user message to chat
+    addMessageToChat(message, 'user');
+    conversationHistory.push({ role: 'user', content: message });
+    
+    // Clear input
+    messageInput.value = '';
+    messageInput.style.height = 'auto';
+    
+    // Disable send button
+    sendButton.disabled = true;
+    
+    // Show loading indicator
+    const loadingId = addLoadingIndicator();
+    
+    try {
+        const response = await fetch(`${API_BASE}/chat`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: message,
+                conversationHistory: conversationHistory
+            })
+        });
+        
+        const data = await response.json();
+        
+        // Remove loading indicator
+        removeLoadingIndicator(loadingId);
+        
+        if (data.error) {
+            addMessageToChat(`Error: ${data.error}`, 'assistant');
+        } else {
+            addMessageToChat(data.response, 'assistant');
+            conversationHistory.push({ role: 'assistant', content: data.response });
+        }
+    } catch (error) {
+        removeLoadingIndicator(loadingId);
+        addMessageToChat(`Error de conexión: ${error.message}`, 'assistant');
+    }
+    
+    sendButton.disabled = false;
+}
+
+function addMessageToChat(content, role) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${role}`;
+    
+    const avatarDiv = document.createElement('div');
+    avatarDiv.className = 'message-avatar';
+    avatarDiv.innerHTML = role === 'assistant' 
+        ? '<i class="fas fa-robot"></i>' 
+        : '<i class="fas fa-user"></i>';
+    
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
+    
+    // Format the content (basic markdown-like formatting)
+    const formattedContent = formatMessage(content);
+    contentDiv.innerHTML = formattedContent;
+    renderMath(contentDiv);
+    
+    messageDiv.appendChild(avatarDiv);
+    messageDiv.appendChild(contentDiv);
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function escapeHTML(text) {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function autoWrapPlainMath(content) {
+    if (/\$\$|\\\(|\\\[/.test(content)) {
+        return content;
+    }
+
+    return content.replace(/(^|\n)([^\n]*?(?:\^|_|sqrt|frac|int|lim|sin|cos|tan|=)[^\n]*?)(?=\n|$)/g, (match, prefix, expr) => {
+        const trimmed = expr.trim();
+        if (!trimmed) return match;
+        const hasMathChars = /[\^_]|sqrt|frac|int|lim|sin|cos|tan|=/.test(trimmed);
+        if (!hasMathChars) return match;
+        return `${prefix}$$${trimmed}$$`;
+    });
+}
+
+function formatMessage(content) {
+    if (typeof content !== 'string') {
+        content = String(content);
+    }
+
+    content = escapeHTML(content);
+    content = autoWrapPlainMath(content);
+
+    const mathBlocks = [];
+    content = content.replace(/\$\$([\s\S]*?)\$\$/g, (match) => {
+        const key = `___MATH_BLOCK_${mathBlocks.length}___`;
+        mathBlocks.push(match);
+        return key;
+    });
+    content = content.replace(/\\\(([\s\S]*?)\\\)/g, (match) => {
+        const key = `___MATH_BLOCK_${mathBlocks.length}___`;
+        mathBlocks.push(match);
+        return key;
+    });
+    content = content.replace(/\\\[([\s\S]*?)\\\]/g, (match) => {
+        const key = `___MATH_BLOCK_${mathBlocks.length}___`;
+        mathBlocks.push(match);
+        return key;
+    });
+    content = content.replace(/(^|[^\\])\$([^\$\n]+?)\$(?!\$)/g, (match, prefix, inner) => {
+        const key = `___MATH_BLOCK_${mathBlocks.length}___`;
+        mathBlocks.push(`$${inner}$`);
+        return `${prefix}${key}`;
+    });
+
+    const codeBlocks = [];
+    content = content.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+        const key = `___CODE_BLOCK_${codeBlocks.length}___`;
+        codeBlocks.push({ lang: lang || '', code });
+        return key;
+    });
+
+    let formatted = content
+        // Inline code
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        // Bold
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        // Italic
+        .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+        // Headers
+        .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+        .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+        .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+        // Lists
+        .replace(/^\- (.+)$/gm, '<li>$1</li>')
+        .replace(/^(\d+)\. (.+)$/gm, '<li>$2</li>')
+        // Line breaks
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>');
+
+    // Restore code blocks
+    codeBlocks.forEach((block, index) => {
+        const key = `___CODE_BLOCK_${index}___`;
+        const escapedCode = escapeHTML(block.code);
+        formatted = formatted.replace(key, `<pre><code>${escapedCode}</code></pre>`);
+    });
+
+    // Restore math blocks
+    mathBlocks.forEach((block, index) => {
+        const key = `___MATH_BLOCK_${index}___`;
+        formatted = formatted.replace(key, block);
+    });
+
+    if (!formatted.startsWith('<')) {
+        formatted = `<p>${formatted}</p>`;
+    }
+    
+    return formatted;
+}
+
+function renderMath(element) {
+    if (window.renderMathInElement) {
+        try {
+            renderMathInElement(element, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$', right: '$', display: false },
+                    { left: '\\(', right: '\\)', display: false },
+                    { left: '\\[', right: '\\]', display: true }
+                ],
+                throwOnError: false
+            });
+        } catch (err) {
+            console.warn('Math rendering failed:', err);
+        }
+    }
+}
+
+
+function addLoadingIndicator() {
+    const loadingId = 'loading-' + Date.now();
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = loadingId;
+    loadingDiv.className = 'message assistant';
+    loadingDiv.innerHTML = `
+        <div class="message-avatar">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <span>Pensando...</span>
+            </div>
+        </div>
+    `;
+    chatMessages.appendChild(loadingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return loadingId;
+}
+
+function removeLoadingIndicator(id) {
+    const loadingElement = document.getElementById(id);
+    if (loadingElement) {
+        loadingElement.remove();
+    }
+}
+
+// Event Listeners for Chat
+sendButton.addEventListener('click', () => {
+    sendMessage(messageInput.value);
+});
+
+messageInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage(messageInput.value);
+    }
+});
+
+messageInput.addEventListener('input', () => {
+    messageInput.style.height = 'auto';
+    messageInput.style.height = messageInput.scrollHeight + 'px';
+});
+
+// Quick Actions
+quickActions.forEach(action => {
+    action.addEventListener('click', () => {
+        const prompt = action.dataset.prompt;
+        sendMessage(prompt);
+    });
+});
+
+// Topic Cards
+topicCards.forEach(card => {
+    card.addEventListener('click', () => {
+        const topic = card.dataset.topic;
+        // Switch to chat section
+        navItems.forEach(nav => nav.classList.remove('active'));
+        document.querySelector('[data-section="chat"]').classList.add('active');
+        contentSections.forEach(sec => sec.classList.remove('active'));
+        document.getElementById('chat-section').classList.add('active');
+        // Send the topic as a message
+        sendMessage(topic);
+    });
+});
+
+// Search Functionality
+searchButton.addEventListener('click', async () => {
+    const query = searchInput.value.trim();
+    if (!query) return;
+    
+    searchResults.innerHTML = `
+        <div class="loading">
+            <div class="loading-spinner"></div>
+            <span>Buscando recursos...</span>
+        </div>
+    `;
+    
+    try {
+        const response = await fetch(`${API_BASE}/search`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ query })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            searchResults.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>Error: ${data.error}</p>
+                </div>
+            `;
+        } else {
+            displaySearchResults(data);
+        }
+    } catch (error) {
+        searchResults.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Error de conexión: ${error.message}</p>
+            </div>
+        `;
+    }
+});
+
+function displaySearchResults(data) {
+    if (!data.results || data.results.length === 0) {
+        searchResults.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-search"></i>
+                <p>No se encontraron resultados para "${data.query}"</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    
+    if (data.abstractText) {
+        html += `
+            <div class="search-result-item">
+                <h3>Resumen</h3>
+                <p>${data.abstractText}</p>
+                ${data.abstractSource ? `<small>Fuente: ${data.abstractSource}</small>` : ''}
+            </div>
+        `;
+    }
+    
+    data.results.forEach(result => {
+        if (result.Text && result.FirstURL) {
+            html += `
+                <div class="search-result-item">
+                    <h3>${result.Text.substring(0, 100)}...</h3>
+                    <p>${result.Text.substring(0, 200)}...</p>
+                    <a href="${result.FirstURL}" target="_blank">Ver más →</a>
+                </div>
+            `;
+        }
+    });
+    
+    searchResults.innerHTML = html;
+}
+
+searchInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        searchButton.click();
+    }
+});
+
+// Books Search Functionality
+searchBooksButton.addEventListener('click', async () => {
+    const topic = bookTopic.value;
+    if (!topic) {
+        alert('Por favor selecciona un tema');
+        return;
+    }
+    
+    booksResults.innerHTML = `
+        <div class="loading">
+            <div class="loading-spinner"></div>
+            <span>Buscando libros PDF...</span>
+        </div>
+    `;
+    
+    try {
+        const response = await fetch(`${API_BASE}/pdf-books`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ topic })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            booksResults.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>Error: ${data.error}</p>
+                </div>
+            `;
+        } else {
+            displayPDFBookResults(data);
+        }
+    } catch (error) {
+        booksResults.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Error de conexión: ${error.message}</p>
+            </div>
+        `;
+    }
+});
+
+function displayBookResults(data) {
+    if (!data.results || data.results.length === 0) {
+        booksResults.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-book"></i>
+                <p>No se encontraron libros para "${data.topic}"</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    
+    // Add some classic book recommendations based on topic
+    const classicBooks = getClassicBooks(data.topic);
+    
+    classicBooks.forEach(book => {
+        html += `
+            <div class="book-card">
+                <h3>${book.title}</h3>
+                <p class="author">${book.author}</p>
+                <p class="description">${book.description}</p>
+            </div>
+        `;
+    });
+    
+    booksResults.innerHTML = html;
+}
+
+function displayPDFBookResults(data) {
+    if (!data.books || data.books.length === 0) {
+        booksResults.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-book"></i>
+                <p>No se encontraron libros PDF para "${data.topic}"</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    
+    data.books.forEach(book => {
+        html += `
+            <div class="book-card">
+                <h3>${book.title}</h3>
+                <p class="author">${book.author}</p>
+                <p class="description">Fuente: ${book.source}</p>
+                <a href="${book.url}" target="_blank" class="pdf-link">
+                    <i class="fas fa-external-link-alt"></i>
+                    Abrir PDF / Fuente
+                </a>
+            </div>
+        `;
+    });
+    
+    booksResults.innerHTML = html;
+}
+
+function getClassicBooks(topic) {
+    const booksByTopic = {
+        'algorithms': [
+            { title: 'Introduction to Algorithms', author: 'Cormen, Leiserson, Rivest, Stein', description: 'El libro de texto definitivo sobre algoritmos y estructuras de datos.' },
+            { title: 'Algorithms', author: 'Sedgewick & Wayne', description: 'Una introducción accesible a algoritmos fundamentales.' },
+            { title: 'The Algorithm Design Manual', author: 'Steven Skiena', description: 'Guía práctica para el diseño y análisis de algoritmos.' }
+        ],
+        'software engineering': [
+            { title: 'Clean Code', author: 'Robert C. Martin', description: 'Guía para escribir código limpio y mantenible.' },
+            { title: 'Design Patterns', author: 'Gamma, Helm, Johnson, Vlissides', description: 'Los patrones de diseño GoF esenciales.' },
+            { title: 'Refactoring', author: 'Martin Fowler', description: 'Mejora el diseño de código existente.' }
+        ],
+        'databases': [
+            { title: 'Database System Concepts', author: 'Silberschatz, Korth, Sudarshan', description: 'Conceptos fundamentales de sistemas de bases de datos.' },
+            { title: 'SQL Cookbook', author: 'Anthony Molinaro', description: 'Recetas y soluciones para problemas SQL comunes.' },
+            { title: 'Designing Data-Intensive Applications', author: 'Martin Kleppmann', description: 'Principios de diseño para sistemas de datos modernos.' }
+        ],
+        'operating systems': [
+            { title: 'Operating System Concepts', author: 'Silberschatz, Galvin, Gagne', description: 'El "dinosaurio" - texto clásico de sistemas operativos.' },
+            { title: 'Modern Operating Systems', author: 'Andrew Tanenbaum', description: 'Visión moderna de sistemas operativos.' },
+            { title: 'The Linux Programming Interface', author: 'Michael Kerrisk', description: 'Guía completa de programación en Linux.' }
+        ],
+        'networks': [
+            { title: 'Computer Networking', author: 'Kurose & Ross', description: 'Enfoque de capa superior hacia abajo de redes.' },
+            { title: 'TCP/IP Illustrated', author: 'W. Richard Stevens', description: 'Explicación detallada del protocolo TCP/IP.' },
+            { title: 'Network Warrior', author: 'Gary Donahue', description: 'Guía práctica para administradores de red.' }
+        ],
+        'computer architecture': [
+            { title: 'Computer Organization and Design', author: 'Patterson & Hennessy', description: 'Arquitectura de computadores desde el hardware.' },
+            { title: 'Structured Computer Organization', author: 'Andrew Tanenbaum', description: 'Organización jerárquica de computadores.' },
+            { title: 'Code', author: 'Charles Petzold', description: 'Desde ceros y unos a aplicaciones modernas.' }
+        ],
+        'machine learning': [
+            { title: 'Hands-On Machine Learning', author: 'Aurélien Géron', description: 'Guía práctica con Scikit-Learn, Keras y TensorFlow.' },
+            { title: 'Pattern Recognition and Machine Learning', author: 'Christopher Bishop', description: 'Fundamentos matemáticos de ML.' },
+            { title: 'Deep Learning', author: 'Ian Goodfellow et al.', description: 'Texto definitivo sobre aprendizaje profundo.' }
+        ],
+        'cybersecurity': [
+            { title: 'Practical Malware Analysis', author: 'Sikorski & Honig', description: 'Guía práctica de análisis de malware.' },
+            { title: 'Web Application Hacker\'s Handbook', author: 'Dafydd Stuttard', description: 'Seguridad de aplicaciones web.' },
+            { title: 'Security Engineering', author: 'Ross Anderson', description: 'Diseño de sistemas seguros.' }
+        ],
+        'cloud computing': [
+            { title: 'Cloud Computing: Concepts, Technology & Architecture', author: 'Erl et al.', description: 'Fundamentos de computación en la nube.' },
+            { title: 'AWS Certified Solutions Architect', author: 'Syed & Rahman', description: 'Preparación para certificación AWS.' },
+            { title: 'Kubernetes Up & Running', author: 'Brendan Burns et al.', description: 'Orquestación de contenedores con Kubernetes.' }
+        ]
+    };
+    
+    return booksByTopic[topic] || [
+        { title: 'The Pragmatic Programmer', author: 'Andrew Hunt & David Thomas', description: 'Mejora tus habilidades de programación.' },
+        { title: 'Clean Architecture', author: 'Robert C. Martin', description: 'Principios de diseño de software.' },
+        { title: 'Peopleware', author: 'Tom DeMarco & Tim Lister', description: 'Aspectos humanos del desarrollo de software.' }
+    ];
+}
+
+// Document Upload Functionality
+pdfInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    await uploadDocument(file, 'pdf');
+});
+
+wordInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    await uploadDocument(file, 'word');
+});
+
+async function uploadDocument(file, type) {
+    const reader = new FileReader();
+    
+    reader.onload = async (e) => {
+        const base64Data = e.target.result;
+        
+        try {
+            const endpoint = type === 'pdf' ? '/upload-pdf' : '/upload-word';
+            const response = await fetch(`${API_BASE}${endpoint}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    [type === 'pdf' ? 'pdfData' : 'wordData']: base64Data,
+                    fileName: file.name
+                })
+            });
+            
+            const data = await response.json();
+            
+            console.log('Document upload response:', data);
+            
+            if (data.success) {
+                currentDocumentText = data.text;
+                documentConversationHistory = [];
+                
+                documentFileName.textContent = data.fileName;
+                documentPages.textContent = data.pages || 'N/A';
+                documentChars.textContent = data.text.length.toLocaleString();
+                documentPreviewText.textContent = data.text.substring(0, 500) + '...';
+                
+                documentInfo.style.display = 'block';
+                
+                // Hide upload zones
+                document.querySelector('.upload-area').style.display = 'none';
+                
+                console.log('Document loaded successfully, text length:', data.text.length);
+            } else if (data.error === 'SCANNED_PDF') {
+                alert('⚠️ ' + data.message + '\n\nPor favor, copia y pega el contenido del documento directamente en el chat para que pueda ayudarte.');
+            } else {
+                console.error('Document upload error:', data);
+                alert('Error al procesar el documento: ' + data.error);
+            }
+        } catch (error) {
+            alert('Error de conexión: ' + error.message);
+        }
+    };
+    
+    reader.readAsDataURL(file);
+}
+
+// Clear document
+clearDocument.addEventListener('click', () => {
+    currentDocumentText = '';
+    documentConversationHistory = [];
+    documentInfo.style.display = 'none';
+    document.querySelector('.upload-area').style.display = 'grid';
+    pdfInput.value = '';
+    wordInput.value = '';
+});
+
+// Ask question about document
+askDocumentButton.addEventListener('click', async () => {
+    const question = documentQuestionInput.value.trim();
+    if (!question || !currentDocumentText) return;
+    
+    documentQuestionInput.value = '';
+    
+    // Add user question to document preview
+    const questionDiv = document.createElement('div');
+    questionDiv.className = 'document-question';
+    questionDiv.innerHTML = `<strong>Tú:</strong> ${question}`;
+    documentPreviewText.appendChild(questionDiv);
+    
+    // Show loading
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'document-loading';
+    loadingDiv.innerHTML = '<div class="loading-spinner"></div> <span>Pensando...</span>';
+    documentPreviewText.appendChild(loadingDiv);
+    
+    try {
+        const response = await fetch(`${API_BASE}/chat-with-document`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: question,
+                documentText: currentDocumentText,
+                conversationHistory: documentConversationHistory
+            })
+        });
+        
+        const data = await response.json();
+        
+        // Remove loading
+        loadingDiv.remove();
+        
+        if (data.error) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'document-error';
+            errorDiv.innerHTML = `<strong>Error:</strong> ${data.error}`;
+            documentPreviewText.appendChild(errorDiv);
+        } else {
+            const answerDiv = document.createElement('div');
+            answerDiv.className = 'document-answer';
+            answerDiv.innerHTML = `<strong>IA:</strong> ${formatMessage(data.response)}`;
+            renderMath(answerDiv);
+            documentPreviewText.appendChild(answerDiv);
+            
+            documentConversationHistory.push({ role: 'user', content: question });
+            documentConversationHistory.push({ role: 'assistant', content: data.response });
+        }
+        
+        // Scroll to bottom
+        documentPreviewText.scrollTop = documentPreviewText.scrollHeight;
+    } catch (error) {
+        loadingDiv.remove();
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'document-error';
+        errorDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+        documentPreviewText.appendChild(errorDiv);
+    }
+});
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    // Check if LM Studio is running
+    fetch(`${API_BASE}/health`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Server health:', data);
+        })
+        .catch(error => {
+            console.error('Server not reachable:', error);
+            addMessageToChat('⚠️ No se puede conectar con el servidor. Asegúrate de que LM Studio esté ejecutándose en localhost:1234 y el servidor Node.js esté iniciado.', 'assistant');
+        });
+});

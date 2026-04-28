@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemma 4 Engineering Tutor</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script></head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <h1>Gemma 4 Tutor</h1>
+                <p class="tagline">Ingeniería de Sistemas</p>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-item active" data-section="chat">
+                    <i class="fas fa-comments"></i>
+                    <span>Chat con IA</span>
+                </button>
+                <button class="nav-item" data-section="documents">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Subir Documentos</span>
+                </button>
+                <button class="nav-item" data-section="search">
+                    <i class="fas fa-search"></i>
+                    <span>Buscar Recursos</span>
+                </button>
+                <button class="nav-item" data-section="books">
+                    <i class="fas fa-book"></i>
+                    <span>Libros PDF</span>
+                </button>
+                <button class="nav-item" data-section="topics">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>Temas Populares</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span class="status-text">LM Studio Conectado</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Chat Section -->
+            <section id="chat-section" class="content-section active">
+                <div class="section-header">
+                    <h2><i class="fas fa-robot"></i> Tu Profesor Virtual de Ingeniería</h2>
+                    <p>Pregunta cualquier tema sobre Ingeniería de Sistemas</p>
+                </div>
+
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message assistant">
+                            <div class="message-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="message-content">
+                                <p>¡Hola! Soy tu tutor virtual de Ingeniería de Sistemas, potenciado por Gemma 4. Estoy aquí para ayudarte con:</p>
+                                <ul>
+                                    <li>Software Engineering y Desarrollo</li>
+                                    <li>Arquitectura de Computadores</li>
+                                    <li>Bases de Datos</li>
+                                    <li>Sistemas Operativos</li>
+                                    <li>Redes y Comunicaciones</li>
+                                    <li>Algoritmos y Estructuras de Datos</li>
+                                    <li>Y mucho más...</li>
+                                </ul>
+                                <p>¿En qué puedo ayudarte hoy?</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chat-input-container">
+                        <div class="input-wrapper">
+                            <textarea 
+                                id="messageInput" 
+                                placeholder="Escribe tu pregunta aquí..." 
+                                rows="1"
+                            ></textarea>
+                            <button id="sendButton" class="send-button">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                        <div class="quick-actions">
+                            <button class="quick-action" data-prompt="Explícame qué es la arquitectura de microservicios">
+                                <i class="fas fa-cubes"></i>
+                                Microservicios
+                            </button>
+                            <button class="quick-action" data-prompt="¿Cuáles son los patrones de diseño más importantes?">
+                                <i class="fas fa-sitemap"></i>
+                                Patrones de Diseño
+                            </button>
+                            <button class="quick-action" data-prompt="Recomiéndame libros de algoritmos y estructuras de datos">
+                                <i class="fas fa-book-open"></i>
+                                Libros de Algoritmos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Documents Section -->
+            <section id="documents-section" class="content-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-file-alt"></i> Subir y Analizar Documentos</h2>
+                    <p>Sube PDFs o documentos Word para que la IA los lea y responda preguntas</p>
+                </div>
+
+                <div class="documents-container">
+                    <div class="upload-area">
+                        <div class="upload-zone" id="pdfUploadZone">
+                            <i class="fas fa-file-pdf"></i>
+                            <h3>Subir PDF</h3>
+                            <p>Arrastra un archivo PDF aquí o haz clic para seleccionar</p>
+                            <input type="file" id="pdfInput" accept=".pdf" style="display: none;">
+                            <button class="upload-button" onclick="document.getElementById('pdfInput').click()">
+                                <i class="fas fa-upload"></i>
+                                Seleccionar PDF
+                            </button>
+                        </div>
+
+                        <div class="upload-zone" id="wordUploadZone">
+                            <i class="fas fa-file-word"></i>
+                            <h3>Subir Word</h3>
+                            <p>Arrastra un archivo Word aquí o haz clic para seleccionar</p>
+                            <input type="file" id="wordInput" accept=".docx,.doc" style="display: none;">
+                            <button class="upload-button" onclick="document.getElementById('wordInput').click()">
+                                <i class="fas fa-upload"></i>
+                                Seleccionar Word
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="document-info" id="documentInfo" style="display: none;">
+                        <div class="document-header">
+                            <h3><i class="fas fa-file"></i> Documento Cargado</h3>
+                            <button class="clear-document" id="clearDocument">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="document-details">
+                            <p><strong>Archivo:</strong> <span id="documentFileName">-</span></p>
+                            <p><strong>Páginas:</strong> <span id="documentPages">-</span></p>
+                            <p><strong>Caracteres:</strong> <span id="documentChars">-</span></p>
+                        </div>
+                        <div class="document-preview">
+                            <h4>Contenido del Documento:</h4>
+                            <div id="documentPreviewText"></div>
+                        </div>
+                        <div class="document-chat">
+                            <h4>Preguntar sobre el documento:</h4>
+                            <div class="input-wrapper">
+                                <textarea 
+                                    id="documentQuestionInput" 
+                                    placeholder="Haz una pregunta sobre el documento..." 
+                                    rows="2"
+                                ></textarea>
+                                <button id="askDocumentButton" class="send-button">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Search Section -->
+            <section id="search-section" class="content-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-search"></i> Buscar Recursos Educativos</h2>
+                    <p>Encuentra tutoriales, documentación y recursos en línea</p>
+                </div>
+
+                <div class="search-container">
+                    <div class="search-box">
+                        <input 
+                            type="text" 
+                            id="searchInput" 
+                            placeholder="Ej: bases de datos SQL, redes neuronales, sistemas distribuidos..."
+                        >
+                        <button id="searchButton">
+                            <i class="fas fa-search"></i>
+                            Buscar
+                        </button>
+                    </div>
+
+                    <div class="search-results" id="searchResults">
+                        <div class="empty-state">
+                            <i class="fas fa-search"></i>
+                            <p>Realiza una búsqueda para encontrar recursos educativos</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Books Section -->
+            <section id="books-section" class="content-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-book"></i> Libros PDF Gratuitos</h2>
+                    <p>Enlaces directos a libros de Ingeniería de Sistemas en formato PDF</p>
+                </div>
+
+                <div class="books-container">
+                    <div class="topic-selector">
+                        <select id="bookTopic">
+                            <option value="">Selecciona un tema...</option>
+                            <option value="algorithms">Algoritmos y Estructuras de Datos</option>
+                            <option value="software engineering">Ingeniería de Software</option>
+                            <option value="databases">Bases de Datos</option>
+                            <option value="operating systems">Sistemas Operativos</option>
+                            <option value="networks">Redes y Comunicaciones</option>
+                            <option value="computer architecture">Arquitectura de Computadores</option>
+                            <option value="machine learning">Machine Learning</option>
+                            <option value="cybersecurity">Ciberseguridad</option>
+                            <option value="cloud computing">Cloud Computing</option>
+                        </select>
+                        <button id="searchBooksButton">
+                            <i class="fas fa-search"></i>
+                            Buscar Libros PDF
+                        </button>
+                    </div>
+
+                    <div class="books-results" id="booksResults">
+                        <div class="empty-state">
+                            <i class="fas fa-book"></i>
+                            <p>Selecciona un tema para ver libros PDF gratuitos</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Topics Section -->
+            <section id="topics-section" class="content-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-lightbulb"></i> Temas Populares</h2>
+                    <p>Preguntas frecuentes y temas importantes en Ingeniería de Sistemas</p>
+                </div>
+
+                <div class="topics-grid">
+                    <div class="topic-card" data-topic="¿Qué es la complejidad temporal Big O?">
+                        <div class="topic-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3>Complejidad Big O</h3>
+                        <p>Entiende cómo analizar la eficiencia de algoritmos</p>
+                    </div>
+
+                    <div class="topic-card" data-topic="Explícame el modelo OSI y las capas de red">
+                        <div class="topic-icon">
+                            <i class="fas fa-network-wired"></i>
+                        </div>
+                        <h3>Modelo OSI</h3>
+                        <p>Las 7 capas de las redes de computadoras</p>
+                    </div>
+
+                    <div class="topic-card" data-topic="¿Cuáles son los tipos de bases de datos NoSQL?">
+                        <div class="topic-icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <h3>Bases de Datos NoSQL</h3>
+                        <p>Documentos, clave-valor, grafos y más</p>
+                    </div>
+
+                    <div class="topic-card" data-topic="¿Qué es DevOps y CI/CD?">
+                        <div class="topic-icon">
+                            <i class="fas fa-infinity"></i>
+                        </div>
+                        <h3>DevOps y CI/CD</h3>
+                        <p>Integración y despliegue continuo</p>
+                    </div>
+
+                    <div class="topic-card" data-topic="Explícame la diferencia entre procesos y hilos">
+                        <div class="topic-icon">
+                            <i class="fas fa-microchip"></i>
+                        </div>
+                        <h3>Procesos vs Hilos</h3>
+                        <p>Conceptos fundamentales de sistemas operativos</p>
+                    </div>
+
+                    <div class="topic-card" data-topic="¿Qué es una API RESTful?">
+                        <div class="topic-icon">
+                            <i class="fas fa-plug"></i>
+                        </div>
+                        <h3>APIs RESTful</h3>
+                        <p>Diseño de servicios web modernos</p>
+                    </div>
+
+                    <div class="topic-card" data-topic="Explícame los patrones de diseño GoF">
+                        <div class="topic-icon">
+                            <i class="fas fa-puzzle-piece"></i>
+                        </div>
+                        <h3>Patrones de Diseño</h3>
+                        <p>Los 23 patrones esenciales de software</p>
+                    </div>
+
+                    <div class="topic-card" data-topic="¿Qué es Docker y contenedores?">
+                        <div class="topic-icon">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <h3>Docker y Contenedores</h3>
+                        <p>Virtualización a nivel de sistema operativo</p>
+                    </div>
+
+                    <div class="topic-card" data-topic="Explícame el aprendizaje supervisado vs no supervisado">
+                        <div class="topic-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h3>Tipos de Aprendizaje ML</h3>
+                        <p>Supervisado, no supervisado y reforzado</p>
+                    </div>
+
+                    <div class="topic-card" data-topic="¿Qué es la escalabilidad horizontal vs vertical?">
+                        <div class="topic-icon">
+                            <i class="fas fa-arrows-alt-v"></i>
+                        </div>
+                        <h3>Escalabilidad</h3>
+                        <p>Cómo escalar sistemas de manera efectiva</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

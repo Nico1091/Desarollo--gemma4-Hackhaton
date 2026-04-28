@@ -1,0 +1,31 @@
+{
+  "name": "gemma4-engineering-tutor",
+  "version": "1.0.0",
+  "description": "AI-powered tutor for Systems Engineering students using Gemma 4",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "form-data": "^4.0.5",
+    "fs-extra": "^11.2.0",
+    "mammoth": "^1.12.0",
+    "multer": "^1.4.5-lts.1",
+    "node-fetch": "^3.3.2",
+    "node-tesseract-ocr": "^2.2.1",
+    "openai": "^6.34.0",
+    "pdf-image": "^2.0.0",
+    "pdf-parse": "^1.1.1",
+    "pdf2pic": "^3.2.0",
+    "tesseract.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
