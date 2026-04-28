@@ -33,6 +33,44 @@ async function callOpenAIAssistant(messages, temperature = 0.7) {
   return response.choices?.[0]?.message?.content || '';
 }
 
+async function callLmStudioPrompt(prompt, systemPrompt = SYSTEM_PROMPT, temperature = 0.7) {
+  const response = await axios.post(`${LM_STUDIO_URL}/api/v1/chat`, {
+    model: process.env.LM_STUDIO_MODEL || 'google/gemma-4-e4b',
+    system_prompt: systemPrompt,
+    input: prompt,
+    temperature
+  }, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+
+  let responseText = '';
+  if (response.data.output && Array.isArray(response.data.output)) {
+    const messageOutput = response.data.output.find(item => item.type === 'message');
+    if (messageOutput && messageOutput.content) {
+      responseText = messageOutput.content;
+    }
+  }
+
+  if (!responseText) {
+    if (response.data.message?.content) {
+      responseText = response.data.message.content;
+    } else if (response.data.content) {
+      responseText = response.data.content;
+    } else if (typeof response.data === 'string') {
+      responseText = response.data;
+    } else {
+      responseText = JSON.stringify(response.data);
+    }
+  }
+
+  return {
+    text: String(responseText),
+    usage: response.data.usage
+  };
+}
+
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -220,6 +258,67 @@ app.post('/api/books', async (req, res) => {
       error: 'Failed to search for books',
       details: error.message 
     });
+  }
+});
+
+app.post('/api/study-plan', async (req, res) => {
+  try {
+    const { topic, durationWeeks = 4, level = 'intermedio' } = req.body;
+
+    if (!topic || !topic.trim()) {
+      return res.status(400).json({ error: 'El tema es requerido para generar el plan de estudio.' });
+    }
+
+    const prompt = `Eres un tutor experto en Ingeniería de Sistemas. Genera un plan de estudio de ${durationWeeks} semanas para el tema: ${topic}. Incluye objetivos semanales claros, actividades prácticas, recursos recomendados y consejos de estudio. Ajusta el lenguaje para un estudiante de nivel ${level}. Devuelve la respuesta en español con listas numeradas.`;
+
+    const result = await callLmStudioPrompt(prompt, SYSTEM_PROMPT, 0.7);
+
+    res.json({ response: result.text, usage: result.usage });
+  } catch (error) {
+    console.error('Error generating study plan:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Failed to generate study plan', details: error.response?.data || error.message });
+  }
+});
+
+app.post('/api/quiz', async (req, res) => {
+  try {
+    const { topic, questions = 5, level = 'intermedio' } = req.body;
+
+    if (!topic || !topic.trim()) {
+      return res.status(400).json({ error: 'El tema es requerido para generar el quiz.' });
+    }
+
+    const prompt = `Eres un profesor experto en Ingeniería de Sistemas. Crea un quiz de ${questions} preguntas sobre el tema: ${topic}. Cada pregunta debe tener cuatro opciones (A, B, C, D). Al final, incluye las respuestas correctas con una breve explicación para cada una. Usa un lenguaje claro en español.`;
+
+    const result = await callLmStudioPrompt(prompt, SYSTEM_PROMPT, 0.7);
+
+    res.json({ response: result.text, usage: result.usage });
+  } catch (error) {
+    console.error('Error generating quiz:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Failed to generate quiz', details: error.response?.data || error.message });
+  }
+});
+
+app.post('/api/summary', async (req, res) => {
+  try {
+    const { documentText } = req.body;
+
+    if (!documentText || !documentText.trim()) {
+      return res.status(400).json({ error: 'El texto del documento es requerido para generar un resumen.' });
+    }
+
+    const truncatedDocText = documentText.length > 15000
+      ? documentText.substring(0, 15000) + '... [document truncated]'
+      : documentText;
+
+    const prompt = `Eres un asistente que resume documentos técnicos de Ingeniería de Sistemas. Resume el siguiente contenido en no más de 200 palabras, destacando los conceptos clave y las recomendaciones de estudio. Documento:\n\n${truncatedDocText}`;
+
+    const result = await callLmStudioPrompt(prompt, SYSTEM_PROMPT, 0.7);
+
+    res.json({ response: result.text, usage: result.usage });
+  } catch (error) {
+    console.error('Error generating summary:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Failed to generate summary', details: error.response?.data || error.message });
   }
 });
 

@@ -20,11 +20,16 @@ const navItems = document.querySelectorAll('.nav-item');
 const contentSections = document.querySelectorAll('.content-section');
 const quickActions = document.querySelectorAll('.quick-action');
 const topicCards = document.querySelectorAll('.topic-card');
+const chatModeSelect = document.getElementById('chatModeSelect');
+const modeParameterInput = document.getElementById('modeParameterInput');
+const modeParameterWrapper = document.getElementById('modeParameterWrapper');
+const modeParameterLabel = document.getElementById('modeParameterLabel');
 
 // Document upload elements
 const pdfInput = document.getElementById('pdfInput');
 const wordInput = document.getElementById('wordInput');
 const documentInfo = document.getElementById('documentInfo');
+const summaryDocumentButton = document.getElementById('summaryDocumentButton');
 const documentFileName = document.getElementById('documentFileName');
 const documentPages = document.getElementById('documentPages');
 const documentChars = document.getElementById('documentChars');
@@ -46,13 +51,46 @@ navItems.forEach(item => {
     });
 });
 
+function updateModeControls() {
+    const mode = chatModeSelect.value;
+
+    if (mode === 'study-plan') {
+        modeParameterWrapper.style.display = 'flex';
+        modeParameterLabel.textContent = 'Semanas';
+        modeParameterInput.placeholder = '4';
+        messageInput.placeholder = 'Tema para el plan de estudio...';
+    } else if (mode === 'quiz') {
+        modeParameterWrapper.style.display = 'flex';
+        modeParameterLabel.textContent = 'Preguntas';
+        modeParameterInput.placeholder = '5';
+        messageInput.placeholder = 'Tema para el quiz...';
+    } else if (mode === 'summary') {
+        modeParameterWrapper.style.display = 'none';
+        messageInput.placeholder = 'Tema o concepto para resumir...';
+    } else {
+        modeParameterWrapper.style.display = 'none';
+        messageInput.placeholder = 'Escribe tu pregunta aquí...';
+    }
+}
+
+chatModeSelect.addEventListener('change', updateModeControls);
+
 // Chat Functionality
-async function sendMessage(message) {
+async function sendMessage(message, mode = 'chat', modeParam = '') {
     if (!message.trim()) return;
-    
+
+    let displayMessage = message;
+    if (mode === 'study-plan') {
+        displayMessage = `Plan de estudio: ${message}`;
+    } else if (mode === 'quiz') {
+        displayMessage = `Quiz: ${message}`;
+    } else if (mode === 'summary') {
+        displayMessage = `Resumen: ${message}`;
+    }
+
     // Add user message to chat
-    addMessageToChat(message, 'user');
-    conversationHistory.push({ role: 'user', content: message });
+    addMessageToChat(displayMessage, 'user');
+    conversationHistory.push({ role: 'user', content: displayMessage });
     
     // Clear input
     messageInput.value = '';
@@ -65,20 +103,17 @@ async function sendMessage(message) {
     const loadingId = addLoadingIndicator();
     
     try {
-        const response = await fetch(`${API_BASE}/chat`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                message: message,
-                conversationHistory: conversationHistory
-            })
-        });
-        
-        const data = await response.json();
-        
-        // Remove loading indicator
+        let data;
+        if (mode === 'study-plan') {
+            data = await requestStudyPlan(message, modeParam);
+        } else if (mode === 'quiz') {
+            data = await requestQuiz(message, modeParam);
+        } else if (mode === 'summary') {
+            data = await requestSummary(message);
+        } else {
+            data = await requestChat(message);
+        }
+
         removeLoadingIndicator(loadingId);
         
         if (data.error) {
@@ -93,6 +128,61 @@ async function sendMessage(message) {
     }
     
     sendButton.disabled = false;
+}
+
+async function requestChat(message) {
+    const response = await fetch(`${API_BASE}/chat`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            message,
+            conversationHistory
+        })
+    });
+
+    return response.json();
+}
+
+async function requestStudyPlan(topic, weeks) {
+    return fetch(`${API_BASE}/study-plan`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            topic,
+            durationWeeks: Number(weeks) || 4,
+            level: 'intermedio'
+        })
+    }).then(res => res.json());
+}
+
+async function requestQuiz(topic, questions) {
+    return fetch(`${API_BASE}/quiz`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            topic,
+            questions: Number(questions) || 5,
+            level: 'intermedio'
+        })
+    }).then(res => res.json());
+}
+
+async function requestSummary(topic) {
+    return fetch(`${API_BASE}/summary`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            documentText: topic
+        })
+    }).then(res => res.json());
 }
 
 function addMessageToChat(content, role) {
@@ -265,13 +355,13 @@ function removeLoadingIndicator(id) {
 
 // Event Listeners for Chat
 sendButton.addEventListener('click', () => {
-    sendMessage(messageInput.value);
+    sendMessage(messageInput.value, chatModeSelect.value, modeParameterInput.value);
 });
 
 messageInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        sendMessage(messageInput.value);
+        sendMessage(messageInput.value, chatModeSelect.value, modeParameterInput.value);
     }
 });
 
@@ -284,7 +374,9 @@ messageInput.addEventListener('input', () => {
 quickActions.forEach(action => {
     action.addEventListener('click', () => {
         const prompt = action.dataset.prompt;
-        sendMessage(prompt);
+        chatModeSelect.value = 'chat';
+        updateModeControls();
+        sendMessage(prompt, 'chat');
     });
 });
 
@@ -292,13 +384,15 @@ quickActions.forEach(action => {
 topicCards.forEach(card => {
     card.addEventListener('click', () => {
         const topic = card.dataset.topic;
+        chatModeSelect.value = 'chat';
+        updateModeControls();
         // Switch to chat section
         navItems.forEach(nav => nav.classList.remove('active'));
         document.querySelector('[data-section="chat"]').classList.add('active');
         contentSections.forEach(sec => sec.classList.remove('active'));
         document.getElementById('chat-section').classList.add('active');
         // Send the topic as a message
-        sendMessage(topic);
+        sendMessage(topic, 'chat');
     });
 });
 
@@ -691,8 +785,54 @@ askDocumentButton.addEventListener('click', async () => {
     }
 });
 
+summaryDocumentButton.addEventListener('click', async () => {
+    if (!currentDocumentText) return;
+
+    const summaryDiv = document.createElement('div');
+    summaryDiv.className = 'document-loading';
+    summaryDiv.innerHTML = '<div class="loading-spinner"></div> <span>Generando resumen...</span>';
+    documentPreviewText.appendChild(summaryDiv);
+    documentPreviewText.scrollTop = documentPreviewText.scrollHeight;
+
+    try {
+        const response = await fetch(`${API_BASE}/summary`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ documentText: currentDocumentText })
+        });
+
+        const data = await response.json();
+        summaryDiv.remove();
+
+        if (data.error) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'document-error';
+            errorDiv.innerHTML = `<strong>Error:</strong> ${data.error}`;
+            documentPreviewText.appendChild(errorDiv);
+        } else {
+            const summaryResultDiv = document.createElement('div');
+            summaryResultDiv.className = 'document-answer';
+            summaryResultDiv.innerHTML = `<strong>Resumen del documento:</strong> ${formatMessage(data.response)}`;
+            renderMath(summaryResultDiv);
+            documentPreviewText.appendChild(summaryResultDiv);
+        }
+
+        documentPreviewText.scrollTop = documentPreviewText.scrollHeight;
+    } catch (error) {
+        summaryDiv.remove();
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'document-error';
+        errorDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+        documentPreviewText.appendChild(errorDiv);
+    }
+});
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    updateModeControls();
+
     // Check if LM Studio is running
     fetch(`${API_BASE}/health`)
         .then(response => response.json())

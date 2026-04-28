@@ -23,6 +23,9 @@ Esta aplicación aborda el desafío educativo en regiones con acceso limitado a 
 - Explicaciones claras con ejemplos prácticos
 - Contexto de conversación mantenido
 - Respuestas en español
+- Generación de planes de estudio personalizados
+- Creación de quizzes interactivos para practicar
+- Resúmenes de conceptos y documentos técnicos
 
 ### 2. Búsqueda de Recursos Educativos
 - Búsqueda en tiempo real de tutoriales y documentación

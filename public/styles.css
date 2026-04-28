@@ -203,6 +203,57 @@ body {
     height: calc(100vh - 200px);
 }
 
+.chat-settings {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1rem 1.5rem 0;
+}
+
+.mode-controls,
+.mode-parameter {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 180px;
+}
+
+.mode-controls label,
+.mode-parameter label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.mode-controls select,
+.mode-parameter input {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border-radius: 14px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.secondary-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.9rem 1.2rem;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: transparent;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 0.25s ease, transform 0.2s ease;
+}
+
+.secondary-button:hover {
+    background: var(--bg-card-hover);
+    transform: translateY(-1px);
+}
+
 .chat-messages {
     flex: 1;
     overflow-y: auto;
