@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
+const cheerio = require('cheerio');
 const fs = require('fs');
 const path = require('path');
 const pdfParse = require('pdf-parse');
@@ -124,6 +125,77 @@ Cuando resuelvas problemas de documentos:
 - Sugiere extensiones o problemas relacionados.
 
 Siempre sé paciente y alentador. Usa analogías como el flujo de un líquido para campos vectoriales y paisajes para campos escalares.`;
+
+const SIGN_LANGUAGE_DATABASE = [
+  {
+    term: 'hola',
+    category: 'Saludo',
+    description: 'Mano abierta con la palma hacia afuera, moviendo la mano desde la frente hacia adelante.',
+    notes: 'Se usa para saludar a alguien sin sonido.'
+  },
+  {
+    term: 'gracias',
+    category: 'Cortesía',
+    description: 'Los dedos tocan el mentón y la mano se aleja ligeramente hacia adelante con la palma hacia arriba.',
+    notes: 'Expresa agradecimiento en contextos formales e informales.'
+  },
+  {
+    term: 'por favor',
+    category: 'Cortesía',
+    description: 'Mano abierta sobre el pecho, haciendo un pequeño movimiento circular hacia el lado.',
+    notes: 'Se utiliza para pedir algo con respeto.'
+  },
+  {
+    term: 'sí',
+    category: 'Afirmación',
+    description: 'Mano cerrada con el pulgar levantado y un pequeño movimiento hacia adelante.',
+    notes: 'Se usa para responder afirmativamente de forma visual.'
+  },
+  {
+    term: 'no',
+    category: 'Negación',
+    description: 'Los dedos índice y medio se juntan con el pulgar como si se cerrara una pequeña pinza.',
+    notes: 'Se usa para negar o rechazar algo.'
+  },
+  {
+    term: 'adiós',
+    category: 'Despedida',
+    description: 'Mano abierta moviéndose de lado a lado como diciendo "chau".',
+    notes: 'Se usa para despedirse.'
+  },
+  {
+    term: 'ayuda',
+    category: 'Necesidad',
+    description: 'Ambas manos cerradas en puños, moviéndose hacia arriba y abajo.',
+    notes: 'Se usa para pedir ayuda o asistencia.'
+  },
+  {
+    term: 'agua',
+    category: 'Necesidad',
+    description: 'Mano simulando beber agua, llevando los dedos a la boca.',
+    notes: 'Se usa para pedir o referirse al agua.'
+  },
+  {
+    term: 'comer',
+    category: 'Necesidad',
+    description: 'Dedos simulando llevar comida a la boca.',
+    notes: 'Se usa para referirse a la comida o comer.'
+  },
+  {
+    term: 'amigo',
+    category: 'Relaciones',
+    description: 'Índice y pulgar de ambas manos formando una "A", juntándolas.',
+    notes: 'Se usa para referirse a un amigo.'
+  }
+];
+
+const SIGN_LANGUAGE_SYSTEM_PROMPT = `Eres un asistente experto en lenguaje de señas y accesibilidad para personas sordas o con discapacidad auditiva.
+- Responde en español claro y directo, sin explicaciones excesivamente largas.
+- Para consultas simples sobre una seña específica, da solo la descripción básica y un consejo breve.
+- Si no tienes la seña en la base de datos, explica cómo se haría usando señas conocidas.
+- Mantén las respuestas concisas: máximo 3-4 párrafos.
+- No uses tablas ni formatos complejos.
+- Enfócate en lo práctico y útil para aprender.`;
 
 // Chat endpoint
 app.post('/api/chat', async (req, res) => {
@@ -258,6 +330,218 @@ app.post('/api/books', async (req, res) => {
       error: 'Failed to search for books',
       details: error.message 
     });
+  }
+});
+
+app.get('/api/sign-language-list', (req, res) => {
+  res.json({ signs: SIGN_LANGUAGE_DATABASE });
+});
+
+app.post('/api/sign-language-query', async (req, res) => {
+  try {
+    const { query } = req.body;
+    if (!query || !query.trim()) {
+      return res.status(400).json({ error: 'La consulta es requerida para buscar lenguaje de señas.' });
+    }
+
+    const normalizedQuery = query.toLowerCase().trim();
+
+    // Buscar en la base de datos local primero
+    const localSign = SIGN_LANGUAGE_DATABASE.find(sign =>
+      sign.term.toLowerCase() === normalizedQuery
+    );
+
+    if (localSign) {
+      // Si está en la base local, devolver respuesta directa
+      const prompt = `Seña encontrada en base de datos local:
+Término: ${localSign.term}
+Descripción: ${localSign.description}
+Notas: ${localSign.notes}
+
+Da una respuesta concisa con la descripción y un consejo breve.`;
+      const result = await callLmStudioPrompt(prompt, SIGN_LANGUAGE_SYSTEM_PROMPT, 0.7);
+      return res.json({ response: result.text, usage: result.usage, source: 'local' });
+    }
+
+    // Si no está en la base local, buscar en internet
+    try {
+      // Buscar en diccionarios especializados de lenguaje de señas
+      const searchResults = [];
+
+      try {
+        // Buscar en Signing Savvy (diccionario ASL)
+        const signingSavvyUrl = `https://www.signingsavvy.com/search/${encodeURIComponent(normalizedQuery)}`;
+        const signingSavvyResponse = await axios.get(signingSavvyUrl, {
+          timeout: 8000,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          }
+        });
+
+        const $savvy = cheerio.load(signingSavvyResponse.data);
+        const signTitle = $savvy('.sign_title').first().text().trim();
+        const signDescription = $savvy('.sign_description').first().text().trim();
+
+        if (signTitle && signDescription) {
+          searchResults.push({
+            source: 'Signing Savvy',
+            title: signTitle,
+            description: signDescription,
+            url: signingSavvyUrl
+          });
+        }
+      } catch (savvyError) {
+        console.log('Signing Savvy search failed:', savvyError.message);
+      }
+
+      try {
+        // Buscar en Lifeprint ASL Dictionary
+        const lifeprintUrl = `https://www.lifeprint.com/dictionary.htm`;
+        const lifeprintResponse = await axios.get(lifeprintUrl, {
+          timeout: 8000,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          }
+        });
+
+        const $lifeprint = cheerio.load(lifeprintResponse.data);
+        // Buscar enlaces que contengan la palabra
+        const relevantLinks = [];
+        $lifeprint('a').each((index, element) => {
+          const linkText = $lifeprint(element).text().toLowerCase();
+          const href = $lifeprint(element).attr('href');
+          if (linkText.includes(normalizedQuery) && href && href.includes('.htm')) {
+            relevantLinks.push({
+              text: $lifeprint(element).text().trim(),
+              url: `https://www.lifeprint.com${href}`
+            });
+          }
+        });
+
+        if (relevantLinks.length > 0) {
+          searchResults.push({
+            source: 'Lifeprint ASL',
+            title: relevantLinks[0].text,
+            description: `Enlace encontrado en el diccionario ASL de Lifeprint`,
+            url: relevantLinks[0].url
+          });
+        }
+      } catch (lifeprintError) {
+        console.log('Lifeprint search failed:', lifeprintError.message);
+      }
+
+      // Si encontramos resultados en diccionarios especializados
+      if (searchResults.length > 0) {
+        let searchContext = '';
+        searchResults.forEach((result, index) => {
+          searchContext += `Fuente ${index + 1} (${result.source}): ${result.title}\n${result.description}\nURL: ${result.url}\n\n`;
+        });
+
+        const prompt = `Encontré información sobre la seña "${query}" en diccionarios especializados de lenguaje de señas:
+
+${searchContext}
+
+Basándote en esta información de fuentes confiables de ASL (lenguaje de señas americano), explica cómo hacer la seña de "${query}". Mantén la respuesta concisa y práctica. Incluye la fuente si es relevante.`;
+
+        const result = await callLmStudioPrompt(prompt, SIGN_LANGUAGE_SYSTEM_PROMPT, 0.7);
+        return res.json({ response: result.text, usage: result.usage, source: 'specialized_dictionaries' });
+      }
+
+      // Si no hay resultados en diccionarios, intentar búsqueda general
+      const searchQuery = `ASL sign for ${normalizedQuery} how to sign`;
+      const searchResponse = await axios.get(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(searchQuery)}`, {
+        timeout: 10000,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+      });
+
+      const $ = cheerio.load(searchResponse.data);
+      const generalResults = [];
+
+      $('.result').each((index, element) => {
+        if (index < 3) {
+          const title = $(element).find('.result__title a').text().trim();
+          const snippet = $(element).find('.result__snippet').text().trim();
+
+          if (title && snippet && snippet.length > 50) {
+            generalResults.push({
+              title: title,
+              snippet: snippet
+            });
+          }
+        }
+      });
+
+      if (generalResults.length > 0) {
+        let searchContext = '';
+        generalResults.forEach((result, index) => {
+          searchContext += `Resultado ${index + 1}: ${result.title}\n${result.snippet}\n\n`;
+        });
+
+        const prompt = `No encontré "${query}" en diccionarios especializados, pero hallé información general en internet sobre lenguaje de señas:
+
+${searchContext}
+
+Basándote en esta información, explica cómo hacer la seña de "${query}" en ASL. Mantén la respuesta concisa y práctica. Si no es clara, sugiere consultar diccionarios especializados.`;
+
+        const result = await callLmStudioPrompt(prompt, SIGN_LANGUAGE_SYSTEM_PROMPT, 0.7);
+        return res.json({ response: result.text, usage: result.usage, source: 'web_search' });
+      }
+
+      // Si no hay resultados útiles, usar fallback
+      throw new Error('No useful search results found');
+
+    } catch (searchError) {
+      console.error('Error searching web for sign:', searchError.message);
+
+      // Fallback inteligente con búsqueda web básica
+      try {
+        // Búsqueda rápida en Wikipedia para información general
+        const wikiQuery = `American Sign Language ${normalizedQuery}`;
+        const wikiResponse = await axios.get(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(wikiQuery)}`, {
+          timeout: 5000
+        });
+
+        if (wikiResponse.data && wikiResponse.data.extract && wikiResponse.data.extract.length > 100) {
+          const wikiInfo = wikiResponse.data.extract.substring(0, 500);
+          const prompt = `No tengo "${query}" en mi base de datos local. Encontré información general en Wikipedia sobre ASL:
+
+${wikiInfo}
+
+Basándote en esta información contextual sobre lenguaje de señas americano, explica cómo hacer la seña de "${query}". Si la información no es específica sobre la seña, sugiere una aproximación visual práctica.`;
+
+          const result = await callLmStudioPrompt(prompt, SIGN_LANGUAGE_SYSTEM_PROMPT, 0.7);
+          return res.json({ response: result.text, usage: result.usage, source: 'wikipedia' });
+        }
+      } catch (wikiError) {
+        console.log('Wikipedia search failed:', wikiError.message);
+      }
+
+      // Fallback final con conocimiento experto
+      const prompt = `Como experto en lenguaje de señas americano (ASL), no tengo "${query}" en mi base de datos local y no pude encontrar información específica en internet. Te proporciono una explicación basada en patrones comunes de ASL:
+
+Para la seña "${query}", considera estas opciones prácticas:
+
+1. **Búsqueda en diccionarios especializados**: Recomiendo consultar:
+   - Signing Savvy (signingsavvy.com)
+   - Lifeprint ASL Dictionary (lifeprint.com)
+   - Sign School (signschool.com)
+   - Bill Vicars ASL Dictionary
+
+2. **Aproximación visual**: [Genera un gesto descriptivo basado en el significado de la palabra]
+
+3. **Deletreo**: Si es una palabra específica, puedes deletrearla letra por letra usando el alfabeto manual de ASL
+
+¿Te gustaría que te enseñe el alfabeto ASL para deletrear "${query}", o prefieres información sobre una seña relacionada que sí conozco?`;
+
+      const result = await callLmStudioPrompt(prompt, SIGN_LANGUAGE_SYSTEM_PROMPT, 0.7);
+      return res.json({ response: result.text, usage: result.usage, source: 'expert_fallback' });
+    }
+
+  } catch (error) {
+    console.error('Error processing sign language query:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Failed to process sign language query', details: error.message });
   }
 });
 

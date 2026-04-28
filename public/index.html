@@ -38,6 +38,10 @@
                     <i class="fas fa-book"></i>
                     <span>Libros PDF</span>
                 </button>
+                <button class="nav-item" data-section="sign-language">
+                    <i class="fas fa-hand-paper"></i>
+                    <span>Lenguaje de Señas</span>
+                </button>
                 <button class="nav-item" data-section="topics">
                     <i class="fas fa-lightbulb"></i>
                     <span>Temas Populares</span>
@@ -76,6 +80,7 @@
                                     <li>Sistemas Operativos</li>
                                     <li>Redes y Comunicaciones</li>
                                     <li>Algoritmos y Estructuras de Datos</li>
+                                    <li>Lenguaje de señas y accesibilidad</li>
                                     <li>Y mucho más...</li>
                                 </ul>
                                 <p>¿En qué puedo ayudarte hoy?</p>
@@ -256,6 +261,42 @@
                         <div class="empty-state">
                             <i class="fas fa-book"></i>
                             <p>Selecciona un tema para ver libros PDF gratuitos</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sign Language Section -->
+            <section id="sign-language-section" class="content-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-hand-paper"></i> Lenguaje de Señas</h2>
+                    <p>Aprende signos, frases básicas y cómo la IA puede ayudarte a conocer mejor la comunicación accesible.</p>
+                </div>
+
+                <div class="sign-language-container">
+                    <div class="search-box">
+                        <input
+                            type="text"
+                            id="signLanguageInput"
+                            placeholder="Busca una seña o pregunta cómo aprenderla..."
+                        >
+                        <button id="signLanguageSearchButton">
+                            <i class="fas fa-search"></i>
+                            Buscar Seña
+                        </button>
+                    </div>
+
+                    <div class="sign-language-results" id="signLanguageResults">
+                        <div class="empty-state">
+                            <i class="fas fa-handshake"></i>
+                            <p>Busca una palabra o frase para obtener su descripción en lenguaje de señas.</p>
+                        </div>
+                    </div>
+
+                    <div class="sign-language-list" id="signLanguageList">
+                        <div class="section-subheader">
+                            <h3>Señas comunes</h3>
+                            <p>Explora ejemplos básicos que ayudan a mejorar la comunicación con personas sordas o con discapacidad auditiva.</p>
                         </div>
                     </div>
                 </div>

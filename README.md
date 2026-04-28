@@ -8,8 +8,7 @@ Esta aplicación aborda el desafío educativo en regiones con acceso limitado a 
 
 - Explica conceptos complejos de manera clara y accesible
 - Busca recursos educativos en internet
-- Recomienda libros y materiales de estudio
-- Se adapta al nivel del estudiante
+- Recomienda libros y materiales de estudio- Incluye soporte para lenguaje de señas y recursos de accesibilidad- Se adapta al nivel del estudiante
 - Funciona completamente offline con LM Studio local
 
 ## 🏆 Categoría del Hackathon
@@ -37,7 +36,12 @@ Esta aplicación aborda el desafío educativo en regiones con acceso limitado a 
 - Recomendaciones personalizadas
 - Incluye autores y descripciones
 
-### 4. Temas Populares
+### 5. Lenguaje de Señas y Accesibilidad
+- Base de datos de señas comunes
+- Explicaciones de términos y frases básicas
+- Consejos sobre cómo la IA puede analizar y explicar comunicación accesible
+
+### 6. Temas Populares
 - Preguntas frecuentes predefinidas
 - Acceso rápido a conceptos clave
 - Organizado por áreas de conocimiento

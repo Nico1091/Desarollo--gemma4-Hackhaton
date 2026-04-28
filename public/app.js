@@ -16,6 +16,10 @@ const searchResults = document.getElementById('searchResults');
 const bookTopic = document.getElementById('bookTopic');
 const searchBooksButton = document.getElementById('searchBooksButton');
 const booksResults = document.getElementById('booksResults');
+const signLanguageInput = document.getElementById('signLanguageInput');
+const signLanguageSearchButton = document.getElementById('signLanguageSearchButton');
+const signLanguageResults = document.getElementById('signLanguageResults');
+const signLanguageList = document.getElementById('signLanguageList');
 const navItems = document.querySelectorAll('.nav-item');
 const contentSections = document.querySelectorAll('.content-section');
 const quickActions = document.querySelectorAll('.quick-action');
@@ -477,9 +481,111 @@ function displaySearchResults(data) {
     searchResults.innerHTML = html;
 }
 
+async function loadSignLanguageList() {
+    signLanguageList.innerHTML = `
+        <div class="loading">
+            <div class="loading-spinner"></div>
+            <span>Cargando señas comunes...</span>
+        </div>
+    `;
+
+    try {
+        const response = await fetch(`${API_BASE}/sign-language-list`);
+        const data = await response.json();
+
+        if (!data.signs || data.signs.length === 0) {
+            signLanguageList.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-handshake"></i>
+                    <p>No hay señas disponibles en este momento.</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = `<div class="sign-language-grid">`;
+        data.signs.forEach(sign => {
+            html += `
+                <div class="sign-card">
+                    <h4>${sign.term}</h4>
+                    <p><strong>Categoría:</strong> ${sign.category}</p>
+                    <p>${sign.description}</p>
+                    <p><em>${sign.notes}</em></p>
+                </div>
+            `;
+        });
+        html += `</div>`;
+        signLanguageList.innerHTML = html;
+    } catch (error) {
+        signLanguageList.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Error cargando señas: ${error.message}</p>
+            </div>
+        `;
+    }
+}
+
 searchInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         searchButton.click();
+    }
+});
+
+// Sign Language Search Functionality
+signLanguageSearchButton.addEventListener('click', async () => {
+    const query = signLanguageInput.value.trim();
+    if (!query) {
+        alert('Por favor escribe una seña o pregunta.');
+        return;
+    }
+
+    signLanguageResults.innerHTML = `
+        <div class="loading">
+            <div class="loading-spinner"></div>
+            <span>Consultando lenguaje de señas...</span>
+        </div>
+    `;
+
+    try {
+        const response = await fetch(`${API_BASE}/sign-language-query`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ query })
+        });
+
+        const data = await response.json();
+        if (data.error) {
+            signLanguageResults.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>Error: ${data.error}</p>
+                </div>
+            `;
+        } else {
+            signLanguageResults.innerHTML = `
+                <div class="search-result-item">
+                    <h3>Respuesta de lenguaje de señas</h3>
+                    <p>${escapeHTML(data.response)}</p>
+                </div>
+            `;
+            renderMath(signLanguageResults);
+        }
+    } catch (error) {
+        signLanguageResults.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Error de conexión: ${error.message}</p>
+            </div>
+        `;
+    }
+});
+
+signLanguageInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        signLanguageSearchButton.click();
     }
 });
 
@@ -658,6 +764,9 @@ wordInput.addEventListener('change', async (e) => {
     
     await uploadDocument(file, 'word');
 });
+
+// Load the sign language database on startup
+loadSignLanguageList();
 
 async function uploadDocument(file, type) {
     const reader = new FileReader();
