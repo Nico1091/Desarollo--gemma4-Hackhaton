@@ -85,8 +85,8 @@ public/
 
 1. Clonar el repositorio:
 ```bash
-git clone https://github.com/tu-usuario/gemma4-engineering-tutor.git
-cd gemma4-engineering-tutor
+git clone [https://github.com/tu-usuario/gemma4-engineering-tutor.git
+cd gemma4-engineering-tutor](https://github.com/Nico1091/Desarollo--gemma4-Hackhaton)
 ```
 
 2. Instalar dependencias:
