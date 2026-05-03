@@ -60,20 +60,20 @@ function updateModeControls() {
 
     if (mode === 'study-plan') {
         modeParameterWrapper.style.display = 'flex';
-        modeParameterLabel.textContent = 'Semanas';
+        modeParameterLabel.textContent = 'Weeks';
         modeParameterInput.placeholder = '4';
-        messageInput.placeholder = 'Tema para el plan de estudio...';
+        messageInput.placeholder = 'Topic for study plan...';
     } else if (mode === 'quiz') {
         modeParameterWrapper.style.display = 'flex';
-        modeParameterLabel.textContent = 'Preguntas';
+        modeParameterLabel.textContent = 'Questions';
         modeParameterInput.placeholder = '5';
-        messageInput.placeholder = 'Tema para el quiz...';
+        messageInput.placeholder = 'Topic for quiz...';
     } else if (mode === 'summary') {
         modeParameterWrapper.style.display = 'none';
-        messageInput.placeholder = 'Tema o concepto para resumir...';
+        messageInput.placeholder = 'Topic or concept to summarize...';
     } else {
         modeParameterWrapper.style.display = 'none';
-        messageInput.placeholder = 'Escribe tu pregunta aquí...';
+        messageInput.placeholder = 'Type your question here...';
     }
 }
 
@@ -85,11 +85,11 @@ async function sendMessage(message, mode = 'chat', modeParam = '') {
 
     let displayMessage = message;
     if (mode === 'study-plan') {
-        displayMessage = `Plan de estudio: ${message}`;
+        displayMessage = `Study Plan: ${message}`;
     } else if (mode === 'quiz') {
         displayMessage = `Quiz: ${message}`;
     } else if (mode === 'summary') {
-        displayMessage = `Resumen: ${message}`;
+        displayMessage = `Summary: ${message}`;
     }
 
     // Add user message to chat
@@ -128,7 +128,7 @@ async function sendMessage(message, mode = 'chat', modeParam = '') {
         }
     } catch (error) {
         removeLoadingIndicator(loadingId);
-        addMessageToChat(`Error de conexión: ${error.message}`, 'assistant');
+        addMessageToChat(`Connection error: ${error.message}`, 'assistant');
     }
     
     sendButton.disabled = false;
@@ -437,7 +437,7 @@ searchButton.addEventListener('click', async () => {
         searchResults.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-exclamation-circle"></i>
-                <p>Error de conexión: ${error.message}</p>
+                <p>Connection error: ${error.message}</p>
             </div>
         `;
     }
@@ -472,7 +472,7 @@ function displaySearchResults(data) {
                 <div class="search-result-item">
                     <h3>${result.Text.substring(0, 100)}...</h3>
                     <p>${result.Text.substring(0, 200)}...</p>
-                    <a href="${result.FirstURL}" target="_blank">Ver más →</a>
+                    <a href="${result.FirstURL}" target="_blank">View more →</a>
                 </div>
             `;
         }
@@ -485,7 +485,7 @@ async function loadSignLanguageList() {
     signLanguageList.innerHTML = `
         <div class="loading">
             <div class="loading-spinner"></div>
-            <span>Cargando señas comunes...</span>
+            <span>Loading common signs...</span>
         </div>
     `;
 
@@ -497,7 +497,7 @@ async function loadSignLanguageList() {
             signLanguageList.innerHTML = `
                 <div class="empty-state">
                     <i class="fas fa-handshake"></i>
-                    <p>No hay señas disponibles en este momento.</p>
+                    <p>No signs available at the moment.</p>
                 </div>
             `;
             return;
@@ -508,7 +508,7 @@ async function loadSignLanguageList() {
             html += `
                 <div class="sign-card">
                     <h4>${sign.term}</h4>
-                    <p><strong>Categoría:</strong> ${sign.category}</p>
+                    <p><strong>Category:</strong> ${sign.category}</p>
                     <p>${sign.description}</p>
                     <p><em>${sign.notes}</em></p>
                 </div>
@@ -520,7 +520,7 @@ async function loadSignLanguageList() {
         signLanguageList.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-exclamation-circle"></i>
-                <p>Error cargando señas: ${error.message}</p>
+                <p>Error loading signs: ${error.message}</p>
             </div>
         `;
     }
@@ -536,14 +536,14 @@ searchInput.addEventListener('keypress', (e) => {
 signLanguageSearchButton.addEventListener('click', async () => {
     const query = signLanguageInput.value.trim();
     if (!query) {
-        alert('Por favor escribe una seña o pregunta.');
+        alert('Please enter a sign or question.');
         return;
     }
 
     signLanguageResults.innerHTML = `
         <div class="loading">
             <div class="loading-spinner"></div>
-            <span>Consultando lenguaje de señas...</span>
+            <span>Consulting sign language...</span>
         </div>
     `;
 
@@ -567,7 +567,7 @@ signLanguageSearchButton.addEventListener('click', async () => {
         } else {
             signLanguageResults.innerHTML = `
                 <div class="search-result-item">
-                    <h3>Respuesta de lenguaje de señas</h3>
+                    <h3>Sign language response</h3>
                     <p>${escapeHTML(data.response)}</p>
                 </div>
             `;
@@ -577,7 +577,7 @@ signLanguageSearchButton.addEventListener('click', async () => {
         signLanguageResults.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-exclamation-circle"></i>
-                <p>Error de conexión: ${error.message}</p>
+                <p>Connection error: ${error.message}</p>
             </div>
         `;
     }
@@ -629,7 +629,7 @@ searchBooksButton.addEventListener('click', async () => {
         booksResults.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-exclamation-circle"></i>
-                <p>Error de conexión: ${error.message}</p>
+                <p>Connection error: ${error.message}</p>
             </div>
         `;
     }
@@ -697,56 +697,56 @@ function displayPDFBookResults(data) {
 function getClassicBooks(topic) {
     const booksByTopic = {
         'algorithms': [
-            { title: 'Introduction to Algorithms', author: 'Cormen, Leiserson, Rivest, Stein', description: 'El libro de texto definitivo sobre algoritmos y estructuras de datos.' },
-            { title: 'Algorithms', author: 'Sedgewick & Wayne', description: 'Una introducción accesible a algoritmos fundamentales.' },
-            { title: 'The Algorithm Design Manual', author: 'Steven Skiena', description: 'Guía práctica para el diseño y análisis de algoritmos.' }
+            { title: 'Introduction to Algorithms', author: 'Cormen, Leiserson, Rivest, Stein', description: 'The definitive textbook on algorithms and data structures.' },
+            { title: 'Algorithms', author: 'Sedgewick & Wayne', description: 'An accessible introduction to fundamental algorithms.' },
+            { title: 'The Algorithm Design Manual', author: 'Steven Skiena', description: 'Practical guide for algorithm design and analysis.' }
         ],
         'software engineering': [
-            { title: 'Clean Code', author: 'Robert C. Martin', description: 'Guía para escribir código limpio y mantenible.' },
-            { title: 'Design Patterns', author: 'Gamma, Helm, Johnson, Vlissides', description: 'Los patrones de diseño GoF esenciales.' },
-            { title: 'Refactoring', author: 'Martin Fowler', description: 'Mejora el diseño de código existente.' }
+            { title: 'Clean Code', author: 'Robert C. Martin', description: 'Guide to writing clean and maintainable code.' },
+            { title: 'Design Patterns', author: 'Gamma, Helm, Johnson, Vlissides', description: 'The essential GoF design patterns.' },
+            { title: 'Refactoring', author: 'Martin Fowler', description: 'Improve the design of existing code.' }
         ],
         'databases': [
-            { title: 'Database System Concepts', author: 'Silberschatz, Korth, Sudarshan', description: 'Conceptos fundamentales de sistemas de bases de datos.' },
-            { title: 'SQL Cookbook', author: 'Anthony Molinaro', description: 'Recetas y soluciones para problemas SQL comunes.' },
-            { title: 'Designing Data-Intensive Applications', author: 'Martin Kleppmann', description: 'Principios de diseño para sistemas de datos modernos.' }
+            { title: 'Database System Concepts', author: 'Silberschatz, Korth, Sudarshan', description: 'Fundamental concepts of database systems.' },
+            { title: 'SQL Cookbook', author: 'Anthony Molinaro', description: 'Recipes and solutions for common SQL problems.' },
+            { title: 'Designing Data-Intensive Applications', author: 'Martin Kleppmann', description: 'Design principles for modern data systems.' }
         ],
         'operating systems': [
-            { title: 'Operating System Concepts', author: 'Silberschatz, Galvin, Gagne', description: 'El "dinosaurio" - texto clásico de sistemas operativos.' },
-            { title: 'Modern Operating Systems', author: 'Andrew Tanenbaum', description: 'Visión moderna de sistemas operativos.' },
-            { title: 'The Linux Programming Interface', author: 'Michael Kerrisk', description: 'Guía completa de programación en Linux.' }
+            { title: 'Operating System Concepts', author: 'Silberschatz, Galvin, Gagne', description: 'The "dinosaur" - classic operating systems textbook.' },
+            { title: 'Modern Operating Systems', author: 'Andrew Tanenbaum', description: 'Modern view of operating systems.' },
+            { title: 'The Linux Programming Interface', author: 'Michael Kerrisk', description: 'Complete guide to Linux programming.' }
         ],
         'networks': [
-            { title: 'Computer Networking', author: 'Kurose & Ross', description: 'Enfoque de capa superior hacia abajo de redes.' },
-            { title: 'TCP/IP Illustrated', author: 'W. Richard Stevens', description: 'Explicación detallada del protocolo TCP/IP.' },
-            { title: 'Network Warrior', author: 'Gary Donahue', description: 'Guía práctica para administradores de red.' }
+            { title: 'Computer Networking', author: 'Kurose & Ross', description: 'Top-down approach to networking.' },
+            { title: 'TCP/IP Illustrated', author: 'W. Richard Stevens', description: 'Detailed explanation of TCP/IP protocol.' },
+            { title: 'Network Warrior', author: 'Gary Donahue', description: 'Practical guide for network administrators.' }
         ],
         'computer architecture': [
-            { title: 'Computer Organization and Design', author: 'Patterson & Hennessy', description: 'Arquitectura de computadores desde el hardware.' },
-            { title: 'Structured Computer Organization', author: 'Andrew Tanenbaum', description: 'Organización jerárquica de computadores.' },
-            { title: 'Code', author: 'Charles Petzold', description: 'Desde ceros y unos a aplicaciones modernas.' }
+            { title: 'Computer Organization and Design', author: 'Patterson & Hennessy', description: 'Computer architecture from hardware.' },
+            { title: 'Structured Computer Organization', author: 'Andrew Tanenbaum', description: 'Hierarchical organization of computers.' },
+            { title: 'Code', author: 'Charles Petzold', description: 'From zeros and ones to modern applications.' }
         ],
         'machine learning': [
-            { title: 'Hands-On Machine Learning', author: 'Aurélien Géron', description: 'Guía práctica con Scikit-Learn, Keras y TensorFlow.' },
-            { title: 'Pattern Recognition and Machine Learning', author: 'Christopher Bishop', description: 'Fundamentos matemáticos de ML.' },
-            { title: 'Deep Learning', author: 'Ian Goodfellow et al.', description: 'Texto definitivo sobre aprendizaje profundo.' }
+            { title: 'Hands-On Machine Learning', author: 'Aurélien Géron', description: 'Practical guide with Scikit-Learn, Keras and TensorFlow.' },
+            { title: 'Pattern Recognition and Machine Learning', author: 'Christopher Bishop', description: 'Mathematical foundations of ML.' },
+            { title: 'Deep Learning', author: 'Ian Goodfellow et al.', description: 'Definitive text on deep learning.' }
         ],
         'cybersecurity': [
-            { title: 'Practical Malware Analysis', author: 'Sikorski & Honig', description: 'Guía práctica de análisis de malware.' },
-            { title: 'Web Application Hacker\'s Handbook', author: 'Dafydd Stuttard', description: 'Seguridad de aplicaciones web.' },
-            { title: 'Security Engineering', author: 'Ross Anderson', description: 'Diseño de sistemas seguros.' }
+            { title: 'Practical Malware Analysis', author: 'Sikorski & Honig', description: 'Practical guide to malware analysis.' },
+            { title: 'Web Application Hacker\'s Handbook', author: 'Dafydd Stuttard', description: 'Web application security.' },
+            { title: 'Security Engineering', author: 'Ross Anderson', description: 'Design of secure systems.' }
         ],
         'cloud computing': [
-            { title: 'Cloud Computing: Concepts, Technology & Architecture', author: 'Erl et al.', description: 'Fundamentos de computación en la nube.' },
-            { title: 'AWS Certified Solutions Architect', author: 'Syed & Rahman', description: 'Preparación para certificación AWS.' },
-            { title: 'Kubernetes Up & Running', author: 'Brendan Burns et al.', description: 'Orquestación de contenedores con Kubernetes.' }
+            { title: 'Cloud Computing: Concepts, Technology & Architecture', author: 'Erl et al.', description: 'Fundamentals of cloud computing.' },
+            { title: 'AWS Certified Solutions Architect', author: 'Syed & Rahman', description: 'AWS certification preparation.' },
+            { title: 'Kubernetes Up & Running', author: 'Brendan Burns et al.', description: 'Container orchestration with Kubernetes.' }
         ]
     };
     
     return booksByTopic[topic] || [
-        { title: 'The Pragmatic Programmer', author: 'Andrew Hunt & David Thomas', description: 'Mejora tus habilidades de programación.' },
-        { title: 'Clean Architecture', author: 'Robert C. Martin', description: 'Principios de diseño de software.' },
-        { title: 'Peopleware', author: 'Tom DeMarco & Tim Lister', description: 'Aspectos humanos del desarrollo de software.' }
+        { title: 'The Pragmatic Programmer', author: 'Andrew Hunt & David Thomas', description: 'Improve your programming skills.' },
+        { title: 'Clean Architecture', author: 'Robert C. Martin', description: 'Software design principles.' },
+        { title: 'Peopleware', author: 'Tom DeMarco & Tim Lister', description: 'Human aspects of software development.' }
     ];
 }
 
@@ -787,9 +787,15 @@ async function uploadDocument(file, type) {
                 })
             });
             
+            if (!response.ok) {
+                console.error('HTTP error:', response.status, response.statusText);
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
             const data = await response.json();
             
             console.log('Document upload response:', data);
+            console.log('Response status:', response.status);
             
             if (data.success) {
                 currentDocumentText = data.text;
@@ -807,13 +813,13 @@ async function uploadDocument(file, type) {
                 
                 console.log('Document loaded successfully, text length:', data.text.length);
             } else if (data.error === 'SCANNED_PDF') {
-                alert('⚠️ ' + data.message + '\n\nPor favor, copia y pega el contenido del documento directamente en el chat para que pueda ayudarte.');
+                alert('⚠️ ' + data.message + '\n\nPlease copy and paste the document content directly into the chat so I can help you.');
             } else {
                 console.error('Document upload error:', data);
                 alert('Error al procesar el documento: ' + data.error);
             }
         } catch (error) {
-            alert('Error de conexión: ' + error.message);
+            alert('Connection error: ' + error.message);
         }
     };
     
@@ -840,7 +846,7 @@ askDocumentButton.addEventListener('click', async () => {
     // Add user question to document preview
     const questionDiv = document.createElement('div');
     questionDiv.className = 'document-question';
-    questionDiv.innerHTML = `<strong>Tú:</strong> ${question}`;
+    questionDiv.innerHTML = `<strong>You:</strong> ${question}`;
     documentPreviewText.appendChild(questionDiv);
     
     // Show loading
@@ -950,6 +956,6 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .catch(error => {
             console.error('Server not reachable:', error);
-            addMessageToChat('⚠️ No se puede conectar con el servidor. Asegúrate de que LM Studio esté ejecutándose en localhost:1234 y el servidor Node.js esté iniciado.', 'assistant');
+            addMessageToChat('⚠️ Cannot connect to server. Make sure LM Studio is running on localhost:1234 and the Node.js server is started.', 'assistant');
         });
 });

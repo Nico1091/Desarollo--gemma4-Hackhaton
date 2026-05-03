@@ -8,31 +8,11 @@ const pdfParse = require('pdf-parse');
 const mammoth = require('mammoth');
 const tesseract = require('node-tesseract-ocr');
 const { PDFImage } = require('pdf-image');
-const OpenAI = require('openai');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const LM_STUDIO_URL = process.env.LM_STUDIO_URL || 'http://localhost:1234';
-
-// Initialize OpenAI client for document interpretation bridge
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-async function callOpenAIAssistant(messages, temperature = 0.7) {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY no está configurada.');
-  }
-
-  const response = await openai.chat.completions.create({
-    model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-    messages,
-    temperature,
-  });
-
-  return response.choices?.[0]?.message?.content || '';
-}
 
 async function callLmStudioPrompt(prompt, systemPrompt = SYSTEM_PROMPT, temperature = 0.7) {
   const response = await axios.post(`${LM_STUDIO_URL}/api/v1/chat`, {
@@ -84,118 +64,118 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 // Math/Calculus specialized system prompt for document analysis
-const SYSTEM_PROMPT = `Eres un asistente experto en Ingeniería de Sistemas y Matemáticas para estudiantes universitarios.
-- Responde en español claro y accesible.
-- Explica conceptos paso a paso y usa ejemplos prácticos y analogías.
-- Si presentas fórmulas, utiliza exclusivamente LaTeX delimitado con $$...$$ o \(...\). No entregues expresiones matemáticas en texto plano.
-- Entrega las fórmulas reales tal cual, en notación matemática estándar.
-- Acompaña siempre las fórmulas con explicaciones en lenguaje natural.
-- No entregues solo código LaTeX sin explicación.
+const SYSTEM_PROMPT = `You are an expert assistant in Systems Engineering and Mathematics for university students.
+- Respond in clear and accessible English.
+- Explain concepts step by step using practical examples and analogies.
+- If you present formulas, use exclusively LaTeX delimited with $$...$$ or \(...\). Do not deliver mathematical expressions in plain text.
+- Deliver the actual formulas as they are, in standard mathematical notation.
+- Always accompany formulas with explanations in natural language.
+- Do not deliver only LaTeX code without explanation.
 `;
 
-const MATH_SYSTEM_PROMPT = `Eres un profesor experto en Cálculo y Cálculo Vectorial, con profundo conocimiento en:
-- Cálculo diferencial (derivadas, gradientes, optimización)
-- Cálculo integral (integrales de línea y superficie)
-- Cálculo vectorial (gradiente, divergencia, rotacional, campos conservativos)
-- Cálculo multivariable
-- Aplicaciones en física e ingeniería
+const MATH_SYSTEM_PROMPT = `You are an expert professor in Calculus and Vector Calculus, with deep knowledge in:
+- Differential calculus (derivatives, gradients, optimization)
+- Integral calculus (line and surface integrals)
+- Vector calculus (gradient, divergence, curl, conservative fields)
+- Multivariable calculus
+- Applications in physics and engineering
 
-Tu estilo de enseñanza:
-1. Explica conceptos con analogías claras y ejemplos del mundo real.
-2. Divide problemas complejos en pasos simples.
-3. Usa un lenguaje conversacional y accesible.
-4. Relaciona resultados con interpretaciones geométricas y físicas.
-5. Incluye aplicaciones prácticas cuando sea posible.
-6. Usa expresiones matemáticas claras y, cuando incluyas fórmulas, entrégalas en LaTeX delimitado con $$...$$ o \(...\).
-7. Entrega las fórmulas exactas como notación matemática, no como texto descriptivo.
-8. Muestra pasos intermedios y errores comunes.
-8. Conecta los métodos con marcos matemáticos más amplios.
-9. Señala los supuestos y casos especiales.
-10. Haz que el contenido sea amigable y motivador.
+Your teaching style:
+1. Explain concepts with clear analogies and real-world examples.
+2. Break down complex problems into simple steps.
+3. Use conversational and accessible language.
+4. Relate results to geometric and physical interpretations.
+5. Include practical applications when possible.
+6. Use clear mathematical expressions and, when including formulas, deliver them in LaTeX delimited with $$...$$ or \(...\).
+7. Deliver exact formulas as mathematical notation, not as descriptive text.
+8. Show intermediate steps and common errors.
+8. Connect methods with broader mathematical frameworks.
+9. Point out assumptions and special cases.
+10. Make the content friendly and motivating.
 
-Cuando resuelvas problemas de documentos:
-- Lee y comprende el enunciado con cuidado.
-- Explica los conceptos matemáticos involucrados.
-- Ofrece soluciones paso a paso con razonamiento claro.
-- Si usas fórmulas, colócalas en bloques LaTeX delimitados con $$...$$.
-- No entregues fórmulas como texto plano.
-- Proporciona siempre explicaciones en español junto con las fórmulas.
-- Prefiere párrafos cortos, listas numeradas y descripciones visuales.
-- Describe el significado físico o geométrico de los resultados.
-- Sugiere extensiones o problemas relacionados.
+When solving document problems:
+- Read and understand the statement carefully.
+- Explain the mathematical concepts involved.
+- Offer step-by-step solutions with clear reasoning.
+- If you use formulas, place them in LaTeX blocks delimited with $$...$$.
+- Do not deliver formulas as plain text.
+- Always provide explanations in English along with the formulas.
+- Prefer short paragraphs, numbered lists, and visual descriptions.
+- Describe the physical or geometric meaning of the results.
+- Suggest extensions or related problems.
 
-Siempre sé paciente y alentador. Usa analogías como el flujo de un líquido para campos vectoriales y paisajes para campos escalares.`;
+Always be patient and encouraging. Use analogies like the flow of a liquid for vector fields and landscapes for scalar fields.`;
 
 const SIGN_LANGUAGE_DATABASE = [
   {
-    term: 'hola',
-    category: 'Saludo',
-    description: 'Mano abierta con la palma hacia afuera, moviendo la mano desde la frente hacia adelante.',
-    notes: 'Se usa para saludar a alguien sin sonido.'
+    term: 'hello',
+    category: 'Greeting',
+    description: 'Open hand with palm facing outward, moving hand from forehead forward.',
+    notes: 'Used to greet someone without sound.'
   },
   {
-    term: 'gracias',
-    category: 'Cortesía',
-    description: 'Los dedos tocan el mentón y la mano se aleja ligeramente hacia adelante con la palma hacia arriba.',
-    notes: 'Expresa agradecimiento en contextos formales e informales.'
+    term: 'thank you',
+    category: 'Courtesy',
+    description: 'Fingers touch chin and hand moves slightly forward with palm up.',
+    notes: 'Expresses gratitude in formal and informal contexts.'
   },
   {
-    term: 'por favor',
-    category: 'Cortesía',
-    description: 'Mano abierta sobre el pecho, haciendo un pequeño movimiento circular hacia el lado.',
-    notes: 'Se utiliza para pedir algo con respeto.'
+    term: 'please',
+    category: 'Courtesy',
+    description: 'Open hand on chest, making a small circular movement to the side.',
+    notes: 'Used to ask for something with respect.'
   },
   {
-    term: 'sí',
-    category: 'Afirmación',
-    description: 'Mano cerrada con el pulgar levantado y un pequeño movimiento hacia adelante.',
-    notes: 'Se usa para responder afirmativamente de forma visual.'
+    term: 'yes',
+    category: 'Affirmation',
+    description: 'Closed hand with thumb raised and a small forward movement.',
+    notes: 'Used to respond affirmatively visually.'
   },
   {
     term: 'no',
-    category: 'Negación',
-    description: 'Los dedos índice y medio se juntan con el pulgar como si se cerrara una pequeña pinza.',
-    notes: 'Se usa para negar o rechazar algo.'
+    category: 'Negation',
+    description: 'Index and middle fingers join with thumb as if closing a small clip.',
+    notes: 'Used to deny or reject something.'
   },
   {
-    term: 'adiós',
-    category: 'Despedida',
-    description: 'Mano abierta moviéndose de lado a lado como diciendo "chau".',
-    notes: 'Se usa para despedirse.'
+    term: 'goodbye',
+    category: 'Farewell',
+    description: 'Open hand moving side to side as saying bye.',
+    notes: 'Used to say goodbye.'
   },
   {
-    term: 'ayuda',
-    category: 'Necesidad',
-    description: 'Ambas manos cerradas en puños, moviéndose hacia arriba y abajo.',
-    notes: 'Se usa para pedir ayuda o asistencia.'
+    term: 'help',
+    category: 'Need',
+    description: 'Both hands closed in fists, moving up and down.',
+    notes: 'Used to ask for help or assistance.'
   },
   {
-    term: 'agua',
-    category: 'Necesidad',
-    description: 'Mano simulando beber agua, llevando los dedos a la boca.',
-    notes: 'Se usa para pedir o referirse al agua.'
+    term: 'water',
+    category: 'Need',
+    description: 'Hand simulating drinking water, bringing fingers to mouth.',
+    notes: 'Used to ask for or refer to water.'
   },
   {
-    term: 'comer',
-    category: 'Necesidad',
-    description: 'Dedos simulando llevar comida a la boca.',
-    notes: 'Se usa para referirse a la comida o comer.'
+    term: 'eat',
+    category: 'Need',
+    description: 'Fingers simulating bringing food to mouth.',
+    notes: 'Used to refer to food or eating.'
   },
   {
-    term: 'amigo',
-    category: 'Relaciones',
-    description: 'Índice y pulgar de ambas manos formando una "A", juntándolas.',
-    notes: 'Se usa para referirse a un amigo.'
+    term: 'friend',
+    category: 'Relationships',
+    description: 'Index and thumb of both hands forming an A, joining them.',
+    notes: 'Used to refer to a friend.'
   }
 ];
 
-const SIGN_LANGUAGE_SYSTEM_PROMPT = `Eres un asistente experto en lenguaje de señas y accesibilidad para personas sordas o con discapacidad auditiva.
-- Responde en español claro y directo, sin explicaciones excesivamente largas.
-- Para consultas simples sobre una seña específica, da solo la descripción básica y un consejo breve.
-- Si no tienes la seña en la base de datos, explica cómo se haría usando señas conocidas.
-- Mantén las respuestas concisas: máximo 3-4 párrafos.
-- No uses tablas ni formatos complejos.
-- Enfócate en lo práctico y útil para aprender.`;
+const SIGN_LANGUAGE_SYSTEM_PROMPT = `You are an expert assistant in sign language and accessibility for deaf or hard of hearing people.
+- Respond in clear and direct English, without excessively long explanations.
+- For simple queries about a specific sign, give only the basic description and a brief tip.
+- If you don't have the sign in the database, explain how it would be done using known signs.
+- Keep responses concise: maximum 3-4 paragraphs.
+- Do not use tables or complex formats.
+- Focus on what is practical and useful for learning.`;
 
 // Chat endpoint
 app.post('/api/chat', async (req, res) => {
@@ -262,20 +242,6 @@ app.post('/api/chat', async (req, res) => {
   } catch (error) {
     console.error('Error calling LM Studio:', error.response?.data || error.message);
 
-    if (process.env.OPENAI_API_KEY) {
-      try {
-        const messages = [
-          { role: 'system', content: SYSTEM_PROMPT },
-          ...conversationHistory,
-          { role: 'user', content: message }
-        ];
-        const fallbackText = await callOpenAIAssistant(messages);
-        return res.json({ response: fallbackText, fallback: 'openai' });
-      } catch (fallbackError) {
-        console.error('OpenAI fallback failed:', fallbackError.message);
-      }
-    }
-
     res.status(500).json({ 
       error: 'Failed to connect to LM Studio',
       details: error.response?.data || error.message 
@@ -341,38 +307,39 @@ app.post('/api/sign-language-query', async (req, res) => {
   try {
     const { query } = req.body;
     if (!query || !query.trim()) {
-      return res.status(400).json({ error: 'La consulta es requerida para buscar lenguaje de señas.' });
+      return res.status(400).json({ error: 'Query is required to search sign language.' });
     }
 
     const normalizedQuery = query.toLowerCase().trim();
 
-    // Buscar en la base de datos local primero
+    // Search in local database first
     const localSign = SIGN_LANGUAGE_DATABASE.find(sign =>
       sign.term.toLowerCase() === normalizedQuery
     );
 
     if (localSign) {
-      // Si está en la base local, devolver respuesta directa
-      const prompt = `Seña encontrada en base de datos local:
-Término: ${localSign.term}
-Descripción: ${localSign.description}
-Notas: ${localSign.notes}
+      // If in local database, return direct response
+      const prompt = `Sign found in local database:
+Term: ${localSign.term}
+Description: ${localSign.description}
+Notes: ${localSign.notes}
 
-Da una respuesta concisa con la descripción y un consejo breve.`;
+Give a concise response with the description and a brief tip.`;
       const result = await callLmStudioPrompt(prompt, SIGN_LANGUAGE_SYSTEM_PROMPT, 0.7);
       return res.json({ response: result.text, usage: result.usage, source: 'local' });
     }
 
-    // Si no está en la base local, buscar en internet
+    // If not in local database, search on internet
     try {
-      // Buscar en diccionarios especializados de lenguaje de señas
+      // Search in specialized sign language dictionaries
       const searchResults = [];
 
       try {
-        // Buscar en Signing Savvy (diccionario ASL)
+        // Search in Signing Savvy (ASL dictionary)
         const signingSavvyUrl = `https://www.signingsavvy.com/search/${encodeURIComponent(normalizedQuery)}`;
+// ...
         const signingSavvyResponse = await axios.get(signingSavvyUrl, {
-          timeout: 8000,
+          timeout: 30000,
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
           }
@@ -395,17 +362,17 @@ Da una respuesta concisa con la descripción y un consejo breve.`;
       }
 
       try {
-        // Buscar en Lifeprint ASL Dictionary
+        // Search in Lifeprint ASL Dictionary
         const lifeprintUrl = `https://www.lifeprint.com/dictionary.htm`;
         const lifeprintResponse = await axios.get(lifeprintUrl, {
-          timeout: 8000,
+          timeout: 30000,
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
           }
         });
 
         const $lifeprint = cheerio.load(lifeprintResponse.data);
-        // Buscar enlaces que contengan la palabra
+        // Search for links containing the word
         const relevantLinks = [];
         $lifeprint('a').each((index, element) => {
           const linkText = $lifeprint(element).text().toLowerCase();
@@ -422,7 +389,7 @@ Da una respuesta concisa con la descripción y un consejo breve.`;
           searchResults.push({
             source: 'Lifeprint ASL',
             title: relevantLinks[0].text,
-            description: `Enlace encontrado en el diccionario ASL de Lifeprint`,
+            description: `Link found in Lifeprint ASL dictionary`,
             url: relevantLinks[0].url
           });
         }
@@ -430,27 +397,27 @@ Da una respuesta concisa con la descripción y un consejo breve.`;
         console.log('Lifeprint search failed:', lifeprintError.message);
       }
 
-      // Si encontramos resultados en diccionarios especializados
+      // If we found results in specialized dictionaries
       if (searchResults.length > 0) {
         let searchContext = '';
         searchResults.forEach((result, index) => {
-          searchContext += `Fuente ${index + 1} (${result.source}): ${result.title}\n${result.description}\nURL: ${result.url}\n\n`;
+          searchContext += `Source ${index + 1} (${result.source}): ${result.title}\n${result.description}\nURL: ${result.url}\n\n`;
         });
 
-        const prompt = `Encontré información sobre la seña "${query}" en diccionarios especializados de lenguaje de señas:
+        const prompt = `I found information about the sign "${query}" in specialized sign language dictionaries:
 
 ${searchContext}
 
-Basándote en esta información de fuentes confiables de ASL (lenguaje de señas americano), explica cómo hacer la seña de "${query}". Mantén la respuesta concisa y práctica. Incluye la fuente si es relevante.`;
+Based on this information from reliable ASL (American Sign Language) sources, explain how to make the sign for "${query}". Keep the response concise and practical. Include the source if relevant.`;
 
         const result = await callLmStudioPrompt(prompt, SIGN_LANGUAGE_SYSTEM_PROMPT, 0.7);
         return res.json({ response: result.text, usage: result.usage, source: 'specialized_dictionaries' });
       }
 
-      // Si no hay resultados en diccionarios, intentar búsqueda general
+      // If no results in dictionaries, try general search
       const searchQuery = `ASL sign for ${normalizedQuery} how to sign`;
       const searchResponse = await axios.get(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(searchQuery)}`, {
-        timeout: 10000,
+        timeout: 30000,
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
@@ -476,40 +443,40 @@ Basándote en esta información de fuentes confiables de ASL (lenguaje de señas
       if (generalResults.length > 0) {
         let searchContext = '';
         generalResults.forEach((result, index) => {
-          searchContext += `Resultado ${index + 1}: ${result.title}\n${result.snippet}\n\n`;
+          searchContext += `Result ${index + 1}: ${result.title}\n${result.snippet}\n\n`;
         });
 
-        const prompt = `No encontré "${query}" en diccionarios especializados, pero hallé información general en internet sobre lenguaje de señas:
+        const prompt = `I didn't find "${query}" in specialized dictionaries, but I found general information on the internet about sign language:
 
 ${searchContext}
 
-Basándote en esta información, explica cómo hacer la seña de "${query}" en ASL. Mantén la respuesta concisa y práctica. Si no es clara, sugiere consultar diccionarios especializados.`;
+Based on this information, explain how to make the sign for "${query}" in ASL. Keep the response concise and practical. If not clear, suggest consulting specialized dictionaries.`;
 
         const result = await callLmStudioPrompt(prompt, SIGN_LANGUAGE_SYSTEM_PROMPT, 0.7);
         return res.json({ response: result.text, usage: result.usage, source: 'web_search' });
       }
 
-      // Si no hay resultados útiles, usar fallback
+      // If no useful results, use fallback
       throw new Error('No useful search results found');
 
     } catch (searchError) {
       console.error('Error searching web for sign:', searchError.message);
 
-      // Fallback inteligente con búsqueda web básica
+      // Intelligent fallback with basic web search
       try {
-        // Búsqueda rápida en Wikipedia para información general
+        // Quick Wikipedia search for general information
         const wikiQuery = `American Sign Language ${normalizedQuery}`;
         const wikiResponse = await axios.get(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(wikiQuery)}`, {
-          timeout: 5000
+          timeout: 3000
         });
 
         if (wikiResponse.data && wikiResponse.data.extract && wikiResponse.data.extract.length > 100) {
           const wikiInfo = wikiResponse.data.extract.substring(0, 500);
-          const prompt = `No tengo "${query}" en mi base de datos local. Encontré información general en Wikipedia sobre ASL:
+          const prompt = `I don't have "${query}" in my local database. I found general information on Wikipedia about ASL:
 
 ${wikiInfo}
 
-Basándote en esta información contextual sobre lenguaje de señas americano, explica cómo hacer la seña de "${query}". Si la información no es específica sobre la seña, sugiere una aproximación visual práctica.`;
+Based on this contextual information about American Sign Language, explain how to make the sign for "${query}". If the information is not specific about the sign, suggest a practical visual approximation.`;
 
           const result = await callLmStudioPrompt(prompt, SIGN_LANGUAGE_SYSTEM_PROMPT, 0.7);
           return res.json({ response: result.text, usage: result.usage, source: 'wikipedia' });
@@ -518,22 +485,22 @@ Basándote en esta información contextual sobre lenguaje de señas americano, e
         console.log('Wikipedia search failed:', wikiError.message);
       }
 
-      // Fallback final con conocimiento experto
-      const prompt = `Como experto en lenguaje de señas americano (ASL), no tengo "${query}" en mi base de datos local y no pude encontrar información específica en internet. Te proporciono una explicación basada en patrones comunes de ASL:
+      // Final fallback with expert knowledge
+      const prompt = `As an expert in American Sign Language (ASL), I don't have "${query}" in my local database and couldn't find specific information on the internet. I provide an explanation based on common ASL patterns:
 
-Para la seña "${query}", considera estas opciones prácticas:
+For the sign "${query}", consider these practical options:
 
-1. **Búsqueda en diccionarios especializados**: Recomiendo consultar:
+1. **Search in specialized dictionaries**: I recommend consulting:
    - Signing Savvy (signingsavvy.com)
    - Lifeprint ASL Dictionary (lifeprint.com)
    - Sign School (signschool.com)
    - Bill Vicars ASL Dictionary
 
-2. **Aproximación visual**: [Genera un gesto descriptivo basado en el significado de la palabra]
+2. **Visual approximation**: [Generate a descriptive gesture based on the meaning of the word]
 
-3. **Deletreo**: Si es una palabra específica, puedes deletrearla letra por letra usando el alfabeto manual de ASL
+3. **Fingerspelling**: If it's a specific word, you can spell it letter by letter using the ASL manual alphabet
 
-¿Te gustaría que te enseñe el alfabeto ASL para deletrear "${query}", o prefieres información sobre una seña relacionada que sí conozco?`;
+Would you like me to teach you the ASL alphabet to fingerspell "${query}", or would you prefer information about a related sign I do know?`;
 
       const result = await callLmStudioPrompt(prompt, SIGN_LANGUAGE_SYSTEM_PROMPT, 0.7);
       return res.json({ response: result.text, usage: result.usage, source: 'expert_fallback' });
@@ -547,13 +514,13 @@ Para la seña "${query}", considera estas opciones prácticas:
 
 app.post('/api/study-plan', async (req, res) => {
   try {
-    const { topic, durationWeeks = 4, level = 'intermedio' } = req.body;
+    const { topic, durationWeeks = 4, level = 'intermediate' } = req.body;
 
     if (!topic || !topic.trim()) {
-      return res.status(400).json({ error: 'El tema es requerido para generar el plan de estudio.' });
+      return res.status(400).json({ error: 'Topic is required to generate study plan.' });
     }
 
-    const prompt = `Eres un tutor experto en Ingeniería de Sistemas. Genera un plan de estudio de ${durationWeeks} semanas para el tema: ${topic}. Incluye objetivos semanales claros, actividades prácticas, recursos recomendados y consejos de estudio. Ajusta el lenguaje para un estudiante de nivel ${level}. Devuelve la respuesta en español con listas numeradas.`;
+    const prompt = `You are an expert tutor in Systems Engineering. Generate a ${durationWeeks}-week study plan for the topic: ${topic}. Include clear weekly objectives, practical activities, recommended resources, and study tips. Adjust the language for a ${level} level student. Return the response in English with numbered lists.`;
 
     const result = await callLmStudioPrompt(prompt, SYSTEM_PROMPT, 0.7);
 
@@ -566,13 +533,13 @@ app.post('/api/study-plan', async (req, res) => {
 
 app.post('/api/quiz', async (req, res) => {
   try {
-    const { topic, questions = 5, level = 'intermedio' } = req.body;
+    const { topic, questions = 5, level = 'intermediate' } = req.body;
 
     if (!topic || !topic.trim()) {
-      return res.status(400).json({ error: 'El tema es requerido para generar el quiz.' });
+      return res.status(400).json({ error: 'Topic is required to generate quiz.' });
     }
 
-    const prompt = `Eres un profesor experto en Ingeniería de Sistemas. Crea un quiz de ${questions} preguntas sobre el tema: ${topic}. Cada pregunta debe tener cuatro opciones (A, B, C, D). Al final, incluye las respuestas correctas con una breve explicación para cada una. Usa un lenguaje claro en español.`;
+    const prompt = `You are an expert professor in Systems Engineering. Create a quiz of ${questions} questions about the topic: ${topic}. Each question should have four options (A, B, C, D). At the end, include the correct answers with a brief explanation for each one. Use clear language in English.`;
 
     const result = await callLmStudioPrompt(prompt, SYSTEM_PROMPT, 0.7);
 
@@ -588,14 +555,14 @@ app.post('/api/summary', async (req, res) => {
     const { documentText } = req.body;
 
     if (!documentText || !documentText.trim()) {
-      return res.status(400).json({ error: 'El texto del documento es requerido para generar un resumen.' });
+      return res.status(400).json({ error: 'Document text is required to generate summary.' });
     }
 
-    const truncatedDocText = documentText.length > 15000
-      ? documentText.substring(0, 15000) + '... [document truncated]'
+    const truncatedDocText = documentText.length > 30000
+      ? documentText.substring(0, 30000) + '... [document truncated]'
       : documentText;
 
-    const prompt = `Eres un asistente que resume documentos técnicos de Ingeniería de Sistemas. Resume el siguiente contenido en no más de 200 palabras, destacando los conceptos clave y las recomendaciones de estudio. Documento:\n\n${truncatedDocText}`;
+    const prompt = `You are an assistant that summarizes technical Systems Engineering documents. Summarize the following content in no more than 200 words, highlighting key concepts and study recommendations. Document:\n\n${truncatedDocText}`;
 
     const result = await callLmStudioPrompt(prompt, SYSTEM_PROMPT, 0.7);
 
@@ -619,10 +586,36 @@ app.post('/api/upload-pdf', async (req, res) => {
     }
 
     // Remove data URL prefix if present
-    const base64Data = pdfData.replace(/^data:application\/pdf;base64,/, '');
+    let base64Data = pdfData;
+    if (pdfData.startsWith('data:application/pdf;base64,')) {
+      base64Data = pdfData.replace(/^data:application\/pdf;base64,/, '');
+    } else if (pdfData.startsWith('data:text/plain;base64,')) {
+      base64Data = pdfData.replace(/^data:text\/plain;base64,/, '');
+    }
+    
     const buffer = Buffer.from(base64Data, 'base64');
     
     console.log('Buffer created, size:', buffer.length);
+
+    // Check if this is actually a PDF by looking at PDF header
+    const isPdf = buffer.length > 4 && 
+      buffer[0] === 0x25 && // %
+      buffer[1] === 0x50 && // P
+      buffer[2] === 0x44 && // D
+      buffer[3] === 0x46;   // F
+    
+    if (!isPdf) {
+      console.log('File is not a PDF, treating as plain text');
+      const textContent = buffer.toString('utf8');
+      return res.json({
+        success: true,
+        fileName: fileName || 'document.txt',
+        text: textContent,
+        pages: 1,
+        info: {},
+        ocrUsed: false
+      });
+    }
 
     // Parse PDF
     const data = await pdfParse(buffer);
@@ -631,20 +624,19 @@ app.post('/api/upload-pdf', async (req, res) => {
     
     let extractedText = data.text;
     
-    // Special handling for the specific PDF file
-    if (fileName === 'TALLER 1 DE CALCULO VECTORIAL.pdf') {
-      const testDocPath = path.join(__dirname, 'test-document.txt');
-      extractedText = fs.readFileSync(testDocPath, 'utf8');
-      console.log('Using test-document.txt content for this PDF');
-    }
-    
     // If text is very short, PDF is likely scanned - use OCR
-    if (false) { // Disabled OCR for now
+    if (data.text.length < 100) { // Enable OCR for short text PDFs
       console.log('PDF appears to be scanned (image-based). Attempting OCR...');
+      console.log('PDF text length:', data.text.length);
+      console.log('OCR condition met: text length < 100');
+      
+      // Attempt OCR for short text PDFs
+      console.log('Attempting OCR for short text PDF...');
       
       // Save buffer to temporary file for pdf2pic
       const tempPdfPath = path.join(__dirname, 'temp.pdf');
       fs.writeFileSync(tempPdfPath, buffer);
+      console.log('Temporary PDF saved to:', tempPdfPath);
       
       // Use pdf-image to convert PDF pages to images
       const pdfImage = new PDFImage(tempPdfPath, {
@@ -665,17 +657,29 @@ app.post('/api/upload-pdf', async (req, res) => {
       // Convert each page
       for (let i = 0; i < data.numpages; i++) {
         try {
-          const imagePath = await pdfImage.convertPage(i);
           console.log(`Converting page ${i+1}/${data.numpages} to image`);
+          const imagePath = await pdfImage.convertPage(i);
           
-          // OCR the image
+          // OCR: image
+          console.log(`Performing OCR on page ${i+1}...`);
+          console.log(`Image path: ${imagePath}`);
+          
           const text = await tesseract.recognize(imagePath, config);
-          ocrText += text + '\n\n';
+          console.log(`Page ${i+1} raw OCR result:`, text);
+          console.log(`Page ${i+1} OCR result length:`, text.length);
+          
+          if (text && text.trim()) {
+            ocrText += text + '\n\n';
+            console.log(`Page ${i+1} OCR result (first 100 chars):`, text.substring(0, 100));
+          } else {
+            console.log(`Page ${i+1} OCR failed or returned empty result`);
+          }
           
           // Clean up image file
           fs.unlinkSync(imagePath);
         } catch (pageError) {
           console.error(`Error processing page ${i+1}:`, pageError.message);
+          console.error('Page error stack:', pageError.stack);
         }
       }
       
@@ -685,6 +689,9 @@ app.post('/api/upload-pdf', async (req, res) => {
       // Use OCR text if it's longer than extracted text
       if (ocrText.length > data.text.length) {
         extractedText = ocrText;
+        console.log('Using OCR text instead of extracted text');
+      } else {
+        console.log('Using extracted text (OCR text was shorter)');
       }
       
       console.log('OCR completed, extracted text length:', data.text.length, 'OCR text length:', ocrText.length);
@@ -766,8 +773,8 @@ app.post('/api/chat-with-document', async (req, res) => {
     }
 
     // Truncate document text if too long (keep first 15000 chars)
-    const truncatedDocText = documentText.length > 15000 
-      ? documentText.substring(0, 15000) + '... [document truncated]' 
+    const truncatedDocText = documentText.length > 30000 
+      ? documentText.substring(0, 30000) + '... [document truncated]' 
       : documentText;
 
     // Combine document context with conversation
@@ -775,7 +782,7 @@ app.post('/api/chat-with-document', async (req, res) => {
 
     const response = await axios.post(`${LM_STUDIO_URL}/api/v1/chat`, {
       model: process.env.LM_STUDIO_MODEL || 'google/gemma-4-e4b',
-      system_prompt: MATH_SYSTEM_PROMPT + '\n\nYou have been provided with a mathematical document containing calculus problems. Solve the problems step-by-step with clear explanations, analogies, and practical applications. Use natural, conversational language that makes the mathematics accessible and engaging. Deliver the exact formulas in LaTeX delimiters ($$...$$ or \\(...\\)), not as plain text descriptions.',
+      system_prompt: MATH_SYSTEM_PROMPT + '\n\nYou have been provided with a mathematical document containing calculus problems. Solve problems step-by-step with clear explanations, analogies, and practical applications. Use natural, conversational language that makes mathematics accessible and engaging. Deliver exact formulas in LaTeX delimiters ($$...$$ or \\(...\\)), not as plain text descriptions.',
       input: fullInput,
       temperature: 0.7
     }, {
@@ -817,19 +824,6 @@ app.post('/api/chat-with-document', async (req, res) => {
     });
   } catch (error) {
     console.error('Error calling LM Studio with document:', error.response?.data || error.message);
-
-    if (process.env.OPENAI_API_KEY) {
-      try {
-        const messages = [
-          { role: 'system', content: SYSTEM_PROMPT + '\n\n' + MATH_SYSTEM_PROMPT },
-          { role: 'user', content: fullInput }
-        ];
-        const fallbackText = await callOpenAIAssistant(messages);
-        return res.json({ response: fallbackText, fallback: 'openai' });
-      } catch (fallbackError) {
-        console.error('OpenAI fallback failed:', fallbackError.message);
-      }
-    }
 
     res.status(500).json({ 
       error: 'Failed to connect to LM Studio',
@@ -907,7 +901,7 @@ app.post('/api/pdf-books', async (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'ok', 
-    message: 'Gemma 4 Engineering Tutor API is running',
+    message: 'AI Engineering Tutor API is running',
     lmStudioUrl: LM_STUDIO_URL 
   });
 });

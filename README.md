@@ -1,262 +1,281 @@
-# Gemma 4 Engineering Tutor 🎓
+# AI Engineering Tutor 🎓
 
-Una aplicación de tutoría de IA impulsada por Gemma 4 para estudiantes de Ingeniería de Sistemas, construida para el **Gemma 4 Good Hackathon**.
+An AI tutoring application powered by advanced language models for Systems Engineering students, built for educational innovation.
 
-## 🌟 Visión
+## 🌟 Vision
 
-Esta aplicación aborda el desafío educativo en regiones con acceso limitado a recursos educativos de calidad. Utilizando Gemma 4 a través de LM Studio, proporciona un profesor virtual especializado en Ingeniería de Sistemas que:
+This application addresses the educational challenge in regions with limited access to quality educational resources. Using advanced AI through LM Studio, it provides a virtual professor specialized in Systems Engineering that:
 
-- Explica conceptos complejos de manera clara y accesible
-- Busca recursos educativos en internet
-- Recomienda libros y materiales de estudio- Incluye soporte para lenguaje de señas y recursos de accesibilidad- Se adapta al nivel del estudiante
-- Funciona completamente offline con LM Studio local
+- Explains complex concepts clearly and accessibly
+- Searches for educational resources on the internet
+- Recommends books and study materials
+- Includes sign language support and accessibility resources
+- Adapts to the student's level
+- Works completely offline with local LM Studio
 
-## 🏆 Categoría del Hackathon
+## 🏆 Hackathon Category
 
-**Futuro de la Educación** - Reimaginando el proceso de aprendizaje construyendo agentes multiherramienta que se adapten al individuo y empoderen al educador.
+**Future of Education** - Reimagining the learning process by building multi-tool agents that adapt to the individual and empower the educator.
 
-## 🚀 Características
+## 🚀 Features
 
-### 1. Chat con IA Especializada
-- Sistema experto en Ingeniería de Sistemas
-- Explicaciones claras con ejemplos prácticos
-- Contexto de conversación mantenido
-- Respuestas en español
-- Generación de planes de estudio personalizados
-- Creación de quizzes interactivos para practicar
-- Resúmenes de conceptos y documentos técnicos
+### 1. Specialized AI Chat
+- Expert system in Systems Engineering
+- Clear explanations with practical examples
+- Maintained conversation context
+- Responses in English
+- Generation of personalized study plans
+- Creation of interactive quizzes for practice
+- Summaries of concepts and technical documents
 
-### 2. Búsqueda de Recursos Educativos
-- Búsqueda en tiempo real de tutoriales y documentación
-- Integración con DuckDuckGo API
-- Resultados relevantes y curados
+### 2. Educational Resource Search
+- Real-time search for tutorials and documentation
+- Integration with DuckDuckGo API
+- Relevant and curated results
 
-### 3. Recomendación de Libros
-- Base de datos de libros clásicos por tema
-- Recomendaciones personalizadas
-- Incluye autores y descripciones
+### 3. Book Recommendations
+- Database of classic books by topic
+- Personalized recommendations
+- Includes authors and descriptions
 
-### 5. Lenguaje de Señas y Accesibilidad
-- Base de datos de señas comunes
-- Explicaciones de términos y frases básicas
-- Consejos sobre cómo la IA puede analizar y explicar comunicación accesible
+### 5. Sign Language and Accessibility
+- Database of common signs
+- Explanations of basic terms and phrases
+- Tips on how AI can analyze and explain accessible communication
 
-### 6. Temas Populares
-- Preguntas frecuentes predefinidas
-- Acceso rápido a conceptos clave
-- Organizado por áreas de conocimiento
+### 6. Popular Topics
+- Predefined frequently asked questions
+- Quick access to key concepts
+- Organized by knowledge areas
 
-## 🛠️ Arquitectura Técnica
+## 🛠️ Technical Architecture
 
 ### Backend (Node.js + Express)
 ```
 server.js
-├── /api/chat          - Conexión con LM Studio (Gemma 4)
-├── /api/search        - Búsqueda web de recursos
-├── /api/books         - Recomendación de libros
+├── /api/chat          - Connection with LM Studio (AI Model)
+├── /api/search        - Web resource search
+├── /api/books         - Book recommendations
 └── /api/health        - Health check
 ```
 
 ### Frontend (HTML + CSS + JavaScript)
 ```
 public/
-├── index.html         - Interfaz principal
-├── styles.css         - Diseño moderno y responsivo
-└── app.js            - Lógica de interacción
+├── index.html         - Main interface
+├── styles.css         - Modern and responsive design
+└── app.js            - Interaction logic
 ```
 
-### Tecnologías Utilizadas
-- **Gemma 4** (via LM Studio) - Modelo de lenguaje principal
-- **Node.js** - Runtime del servidor
-- **Express** - Framework web
-- **Axios** - Cliente HTTP
-- **DuckDuckGo API** - Búsqueda web
-- **Vanilla JS** - Frontend sin frameworks
-- **CSS3** - Estilos modernos con gradientes y animaciones
+### Technologies Used
+- **Advanced AI Model** (via LM Studio) - Main language model
+- **Node.js** - Server runtime
+- **Express** - Web framework
+- **Axios** - HTTP client
+- **DuckDuckGo API** - Web search
+- **Vanilla JS** - Frontend without frameworks
+- **CSS3** - Modern styles with gradients and animations
 
-## 📦 Instalación
+## 📦 Installation
 
-### Prerrequisitos
-1. **Node.js** (v14 o superior)
-2. **LM Studio** con Gemma 4 modelo cargado
-3. Git (para clonar el repositorio)
+### Prerequisites
+1. **Node.js** (v14 or higher) - Download from https://nodejs.org/
+2. **LM Studio** - Download from https://lmstudio.ai/
+3. Git (to clone the repository) - Download from https://git-scm.com/
 
-### Pasos de Instalación
+### Installation Steps
 
-1. Clonar el repositorio:
+1. Clone the repository:
 ```bash
-git clone [https://github.com/tu-usuario/gemma4-engineering-tutor.git
-cd gemma4-engineering-tutor](https://github.com/Nico1091/Desarollo--gemma4-Hackhaton)
+git clone https://github.com/Nico1091/ai-engineering-tutor
+cd Desarollo--gemma4-Hackhaton
 ```
 
-2. Instalar dependencias:
+2. Install dependencies:
 ```bash
 npm install
 ```
 
-3. Configurar variables de entorno:
-```bash
-# Editar .env si es necesario
+3. Configure environment variables:
+The `.env` file is already included in the repository. Verify it contains:
+```env
 LM_STUDIO_URL=http://localhost:1234
-LM_STUDIO_MODEL=google/gemma-4-e4b
+LM_STUDIO_MODEL=google/gemma-2-9b-it
 PORT=3000
 ```
+If you need to change the port, edit the `.env` file directly.
 
-4. Iniciar LM Studio:
-   - Abrir LM Studio
-   - Cargar el modelo `google/gemma-4-e4b`
-   - Asegurarse de que el servidor esté corriendo en `http://localhost:1234`
+4. Install and configure LM Studio:
+   - Download and install LM Studio from https://lmstudio.ai/
+   - Open LM Studio
+   - In the sidebar, click on the search icon (🔍)
+   - Search for: `google/gemma-2-9b-it`
+   - Click "Download" to download the model (approx. 2-4 GB)
+   - Wait for the download to complete
+   - Go to "Local Server" (server icon in the sidebar)
+   - Select the model `google/gemma-2-9b-it` in the dropdown
+   - Configure the port to 1234
+   - Click "Start Server"
+   - Verify the server is running at `http://localhost:1234`
 
-5. Iniciar el servidor:
+5. Start the server:
 ```bash
 npm start
 ```
+You should see: `Server running on http://localhost:3000`
 
-6. Abrir el navegador en `http://localhost:3000`
+6. Open your browser at `http://localhost:3000`
 
-## 💡 Uso de Gemma 4
+### Common Troubleshooting
 
-### Configuración del Modelo
-- **Modelo**: google/gemma-4-e4b
-- **Temperatura**: 0.7 (balance entre creatividad y precisión)
-- **Max Tokens**: 2000 (respuestas detalladas)
-- **System Prompt**: Especializado en Ingeniería de Sistemas
+- **If port 3000 is occupied:** Change `PORT=3001` in the `.env` file
+- **If LM Studio doesn't connect:** Verify that the LM Studio server is started and the port matches the one in `.env`
+- **If the model is not found:** Search for `google/gemma-4-e4b` in LM Studio and download it
+- **If npm install fails:** Try `npm install --force` or delete the `node_modules` folder and reinstall
+
+## AI Model Usage
+
+### Model Configuration
+- **Model**: google/gemma-2-9b-it
+- **Temperature**: 0.7 (balance between creativity and precision)
+- **Max Tokens**: 2000 (detailed responses)
+- **System Prompt**: Specialized in Systems Engineering
 
 ### Prompt Engineering
-El system prompt está diseñado para:
-- Enfocarse exclusivamente en temas de Ingeniería de Sistemas
-- Proporcionar explicaciones claras y prácticas
-- Incluir ejemplos de código cuando sea relevante
-- Recomendar recursos y libros
-- Adaptarse al nivel del estudiante
+The system prompt is designed to:
+- Focus exclusively on Systems Engineering topics
+- Provide clear and practical explanations
+- Include code examples when relevant
+- Recommend resources and books
+- Adapt to the student's level
 
-## 🎨 Diseño de la Interfaz
+## 🎨 Interface Design
 
-### Principios de Diseño
-- **Modo oscuro** - Reducción de fatiga visual
-- **Gradientes modernos** - Estética contemporánea
-- **Responsive** - Funciona en móviles y desktop
-- **Accesible** - Alto contraste y tipografía clara
-- **Intuitivo** - Navegación simple y directa
+### Design Principles
+- **Dark mode** - Visual fatigue reduction
+- **Modern gradients** - Contemporary aesthetics
+- **Responsive** - Works on mobile and desktop
+- **Accessible** - High contrast and clear typography
+- **Intuitive** - Simple and direct navigation
 
-### Secciones
-1. **Chat con IA** - Conversación principal con el tutor
-2. **Buscar Recursos** - Búsqueda de materiales educativos
-3. **Libros Recomendados** - Biblioteca curada por tema
-4. **Temas Populares** - Acceso rápido a conceptos clave
+### Sections
+1. **AI Chat** - Main conversation with the tutor
+2. **Search Resources** - Search for educational materials
+3. **Recommended Books** - Curated library by topic
+4. **Popular Topics** - Quick access to key concepts
 
-## 🌍 Impacto Social
+## 🌍 Social Impact
 
-### Problema Abordado
-- Estudiantes de ingeniería en regiones con recursos limitados
-- Falta de profesores especializados disponibles
-- Costo elevado de materiales educativos de calidad
-- Barreras lingüísticas (la mayoría de recursos están en inglés)
+### Problem Addressed
+- Engineering students in regions with limited resources
+- Lack of available specialized professors
+- High cost of quality educational materials
+- Language barriers (most resources are in English)
 
-### Solución Proporcionada
-- Acceso gratuito a tutoría especializada 24/7
-- Recursos en español
-- Funcionamiento offline (con LM Studio local)
-- Adaptación personalizada al ritmo del estudiante
-- Recomendaciones de libros accesibles
+### Solution Provided
+- Free access to specialized tutoring 24/7
+- Resources in English
+- Offline operation (with local LM Studio)
+- Personalized adaptation to student's pace
+- Accessible book recommendations
 
-### Potencial de Escalabilidad
-- Puede desplegarse en escuelas y universidades
-- Soporte multilingüe fácil de agregar
-- Integración con plataformas educativas existentes
-- Posibilidad de modelos especializados por área
+### Scalability Potential
+- Can be deployed in schools and universities
+- Easy to add multilingual support
+- Integration with existing educational platforms
+- Possibility of specialized models by area
 
-## 📊 Criterios de Evaluación del Hackathon
+## 📊 Hackathon Evaluation Criteria
 
-### Impacto y Visión (40 puntos)
-✅ Aborda un problema real significativo (acceso a educación de calidad)
-✅ Visión inspiradora con potencial de cambio positivo
-✅ Solución escalable y accesible
+### Impact and Vision (40 points)
+✅ Addresses a real significant problem (access to quality education)
+✅ Inspiring vision with potential for positive change
+✅ Scalable and accessible solution
 
-### Presentación de Video y Narración (30 puntos)
-✅ Video demostrativo de 3 minutos o menos
-✅ Historia clara del problema y solución
-✅ Demo funcional en acción
+### Video Presentation and Narration (30 points)
+✅ 3-minute or less demo video
+✅ Clear story of problem and solution
+✅ Functional demo in action
 
-### Profundidad Técnica y Ejecución (30 puntos)
-✅ Uso innovador de Gemma 4 con system prompt especializado
-✅ Tecnología real, funcional y bien diseñada
-✅ Código bien documentado y estructurado
+### Technical Depth and Execution (30 points)
+✅ Innovative use of AI with specialized system prompt
+✅ Real, functional, and well-designed technology
+✅ Well-documented and structured code
 
-## 🔧 Desafíos Técnicos Superados
+## 🔧 Technical Challenges Overcome
 
-1. **Conexión con LM Studio**
-   - Implementación de API compatible con formato de chat
-   - Manejo de errores y reconexión
-   - Soporte para historial de conversación
+1. **Connection with LM Studio**
+   - Implementation of API compatible with chat format
+   - Error handling and reconnection
+   - Support for conversation history
 
-2. **Búsqueda Web sin API Key**
-   - Uso de DuckDuckGo API gratuita
-   - Filtrado de resultados educativos
-   - Manejo de respuestas asíncronas
+2. **Web Search without API Key**
+   - Use of free DuckDuckGo API
+   - Filtering of educational results
+   - Handling of asynchronous responses
 
-3. **Interfaz Responsiva**
-   - Diseño mobile-first
-   - Optimización de rendimiento
-   - Animaciones suaves
+3. **Responsive Interface**
+   - Mobile-first design
+   - Performance optimization
+   - Smooth animations
 
-4. **Especialización del Modelo**
-   - System prompt cuidadosamente diseñado
-   - Contexto de Ingeniería de Sistemas
-   - Balance entre rigor y accesibilidad
+4. **Model Specialization**
+   - Carefully designed system prompt
+   - Systems Engineering context
+   - Balance between rigor and accessibility
 
-## 📚 Recursos Educativos Incluidos
+## 📚 Educational Resources Included
 
-### Áreas de Conocimiento
-- Software Engineering y Desarrollo
-- Arquitectura de Computadores
-- Bases de Datos y Diseño
-- Sistemas Operativos
-- Redes y Comunicaciones
-- Algoritmos y Estructuras de Datos
-- Gestión de Proyectos
-- Diseño de Sistemas
+### Knowledge Areas
+- Software Engineering and Development
+- Computer Architecture
+- Databases and Design
+- Operating Systems
+- Networks and Communications
+- Algorithms and Data Structures
+- Project Management
+- Systems Design
 - Cloud Computing
-- Ciberseguridad
-- Machine Learning e IA
+- Cybersecurity
+- Machine Learning and AI
 
-### Libros Recomendados
+### Recommended Books
 - Introduction to Algorithms (Cormen et al.)
 - Clean Code (Robert C. Martin)
 - Design Patterns (GoF)
 - Database System Concepts (Silberschatz)
 - Computer Networking (Kurose & Ross)
-- Y muchos más...
+- And many more...
 
-## 🚀 Futuras Mejoras
+## 🚀 Future Improvements
 
-1. **Multilingüismo** - Soporte para más idiomas
-2. **Ejercicios Interactivos** - Problemas de programación
-3. **Seguimiento de Progreso** - Dashboard de aprendizaje
-4. **Modo Offline Completo** - Cache de recursos
-5. **Integración con LMS** - Moodle, Canvas, etc.
-6. **Voice Interface** - Interacción por voz
-7. **Code Execution** - Ejecución de código en sandbox
-8. **Collaborative Features** - Estudio en grupo
+1. **Multilingualism** - Support for more languages
+2. **Interactive Exercises** - Programming problems
+3. **Progress Tracking** - Learning dashboard
+4. **Complete Offline Mode** - Resource cache
+5. **LMS Integration** - Moodle, Canvas, etc.
+6. **Voice Interface** - Voice interaction
+7. **Code Execution** - Code execution in sandbox
+8. **Collaborative Features** - Group study
 
-## 👥 Contribuciones
+## 👥 Contributions
 
-Este proyecto fue desarrollado para el Gemma 4 Good Hackathon 2026.
+This project was developed for educational innovation and AI advancement.
 
-## 📄 Licencia
+## 📄 License
 
-MIT License - Libre para uso educativo y no comercial.
+MIT License - Free for educational and non-commercial use.
 
-## 🙏 Agradecimientos
+## 🙏 Acknowledgments
 
-- Google por el modelo Gemma 4
-- LM Studio por la plataforma de ejecución local
-- La comunidad de código abierto
+- Google for the AI model
+- LM Studio for the local execution platform
+- The open source community
 
-## 📞 Contacto
+## 📞 Contact
 
-Para preguntas sobre el proyecto, contactar a través del repositorio de GitHub.
+For questions about the project, contact through the GitHub repository.
 
 ---
 
-**Construido con ❤️ para democratizar la educación en Ingeniería de Sistemas**
+**Built with ❤️ to democratize Systems Engineering education**

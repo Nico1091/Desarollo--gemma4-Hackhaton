@@ -1,7 +1,7 @@
 {
-  "name": "gemma4-engineering-tutor",
+  "name": "ai-engineering-tutor",
   "version": "1.0.0",
-  "description": "AI-powered tutor for Systems Engineering students using Gemma 4",
+  "description": "AI-powered tutor for Systems Engineering students using advanced AI",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -19,7 +19,6 @@
     "multer": "^1.4.5-lts.1",
     "node-fetch": "^3.3.2",
     "node-tesseract-ocr": "^2.2.1",
-    "openai": "^6.34.0",
     "pdf-image": "^2.0.0",
     "pdf-parse": "^1.1.1",
     "pdf2pic": "^3.2.0",
