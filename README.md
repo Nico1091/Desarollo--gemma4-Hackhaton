@@ -138,7 +138,6 @@ You should see: `Server running on http://localhost:3000`
 ### Model Configuration
 - **Model**: google/gemma-2-9b-it
 - **Temperature**: 0.7 (balance between creativity and precision)
-- **Max Tokens**: 2000 (detailed responses)
 - **System Prompt**: Specialized in Systems Engineering
 
 ### Prompt Engineering
