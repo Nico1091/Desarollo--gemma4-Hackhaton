@@ -272,10 +272,5 @@ MIT License - Free for educational and non-commercial use.
 - LM Studio for the local execution platform
 - The open source community
 
-## 📞 Contact
-
-For questions about the project, contact through the GitHub repository.
-
----
 
 **Built with ❤️ to democratize Systems Engineering education**
